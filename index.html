@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}FanFocusGPT - Chatter Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left Panel - Input Form -->
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fas fa-comment-dots"></i> Chat Assistant</h4>
+            </div>
+            <div class="card-body">
+                <form id="chatForm">
+                    <!-- Creator Selection -->
+                    <div class="mb-3">
+                        <label for="creatorSelect" class="form-label">
+                            <i class="fas fa-user-tie"></i> Select Creator Model
+                        </label>
+                        <select class="form-select" id="creatorSelect" required>
+                            <option value="">Choose a creator...</option>
+                            {% for key, name in creators.items() %}
+                            <option value="{{ key }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Fan Status -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-user-tag"></i> Fan Status
+                        </label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="fanStatus" id="statusNew" value="NEW" checked>
+                            <label class="btn btn-outline-success" for="statusNew">New Fan</label>
+
+                            <input type="radio" class="btn-check" name="fanStatus" id="statusExisting" value="EXISTING">
+                            <label class="btn btn-outline-info" for="statusExisting">Existing Fan</label>
+                        </div>
+                    </div>
+
+                    <!-- Fan ID (for existing fans) -->
+                    <div class="mb-3" id="fanIdGroup" style="display: none;">
+                        <label for="fanId" class="form-label">
+                            <i class="fas fa-id-card"></i> Fan ID (optional)
+                        </label>
+                        <input type="text" class="form-control" id="fanId" placeholder="Leave empty to auto-generate">
+                    </div>
+
+                    <!-- Existing Notes (for existing fans) -->
+                    <div class="mb-3" id="existingNotesGroup" style="display: none;">
+                        <label for="existingNotes" class="form-label">
+                            <i class="fas fa-sticky-note"></i> Existing Fan Notes/Info
+                        </label>
+                        <textarea class="form-control" id="existingNotes" rows="3" 
+                                placeholder="Paste existing fan information, KYC data, or notes here..."></textarea>
+                    </div>
+
+                    <!-- Fan Message -->
+                    <div class="mb-3">
+                        <label for="fanMessage" class="form-label">
+                            <i class="fas fa-comment"></i> Fan's Last Message
+                        </label>
+                        <textarea class="form-control" id="fanMessage" rows="4" 
+                                placeholder="Paste the fan's message here..." required></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary w-100" id="generateBtn">
+                        <i class="fas fa-magic"></i> Generate Response
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Creator Info Panel -->
+        <div class="card shadow mt-4" id="creatorInfoPanel" style="display: none;">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-info-circle"></i> Creator Profile</h5>
+            </div>
+            <div class="card-body" id="creatorInfo">
+                <!-- Creator details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel - Response & Profile -->
+    <div class="col-lg-6">
+        <!-- AI Response -->
+        <div class="card shadow" id="responsePanel" style="display: none;">
+            <div class="card-header bg-success text-white">
+                <h4><i class="fas fa-robot"></i> AI Suggestion</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success" id="aiResponse">
+                    <!-- AI response will appear here -->
+                </div>
+
+                <!-- Upselling Suggestion -->
+                <div id="upsellPanel" style="display: none;">
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-arrow-up"></i> Upselling Opportunity:</h6>
+                        <p id="upsellSuggestion"></p>
+                    </div>
+                </div>
+
+                <!-- Copy Button -->
+                <button class="btn btn-outline-primary" id="copyResponseBtn">
+                    <i class="fas fa-copy"></i> Copy Response
+                </button>
+            </div>
+        </div>
+
+        <!-- Fan Profile Panel -->
+        <div class="card shadow mt-4" id="fanProfilePanel" style="display: none;">
+            <div class="card-header bg-secondary text-white">
+                <h5><i class="fas fa-user-chart"></i> Fan Profile</h5>
+            </div>
+            <div class="card-body">
+                <!-- KYC Progress -->
+                <div class="mb-3">
+                    <h6>KYC Progress</h6>
+                    <div class="progress">
+                        <div class="progress-bar" id="kycProgress" role="progressbar" style="width: 0%">0%</div>
+                    </div>
+                    <small class="text-muted" id="nextKycStep">Next step: Name</small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Fan Type:</strong> <span class="badge bg-primary" id="fanType">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Confidence:</strong> <span class="badge bg-secondary" id="confidenceLevel">LOW</span>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong>Personality:</strong> <span id="personality">Not determined</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Purchase Interest:</strong> <span id="purchaseInterest">LOW</span>
+                    </div>
+                </div>
+
+                <!-- Fan Notes -->
+                <div class="mt-3">
+                    <h6>Notes & Preferences</h6>
+                    <div id="fanNotes" class="small text-muted">No notes yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Generating response...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Main JavaScript for the interface
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('chatForm');
+    const creatorSelect = document.getElementById('creatorSelect');
+    const fanStatusRadios = document.querySelectorAll('input[name="fanStatus"]');
+    const fanIdGroup = document.getElementById('fanIdGroup');
+    const existingNotesGroup = document.getElementById('existingNotesGroup');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+
+    // Show/hide fields based on fan status
+    fanStatusRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'EXISTING') {
+                fanIdGroup.style.display = 'block';
+                existingNotesGroup.style.display = 'block';
+            } else {
+                fanIdGroup.style.display = 'none';
+                existingNotesGroup.style.display = 'none';
+            }
+        });
+    });
+
+    // Load creator info when selected
+    creatorSelect.addEventListener('change', function() {
+        if (this.value) {
+            loadCreatorInfo(this.value);
+        } else {
+            document.getElementById('creatorInfoPanel').style.display = 'none';
+        }
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateResponse();
+    });
+
+    // Copy response functionality
+    document.getElementById('copyResponseBtn').addEventListener('click', function() {
+        const responseText = document.getElementById('aiResponse').textContent;
+        navigator.clipboard.writeText(responseText).then(function() {
+            // Show success feedback
+            const btn = document.getElementById('copyResponseBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        });
+    });
+
+    function loadCreatorInfo(creatorKey) {
+        fetch(`/api/creator_info/${creatorKey}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const creator = data.creator;
+                    const infoHtml = `
+                        <h6>${creator.name}</h6>
+                        <p><strong>Niche:</strong> ${creator.niche_positioning.join(', ')}</p>
+                        <p><strong>Personality:</strong> ${creator.personality_traits.slice(0, 5).join(', ')}</p>
+                        <p><strong>Communication Style:</strong> ${creator.communication_style.tone}</p>
+                        <p><strong>Key Restrictions:</strong></p>
+                        <ul class="small">
+                            ${creator.restrictions.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    `;
+                    document.getElementById('creatorInfo').innerHTML = infoHtml;
+                    document.getElementById('creatorInfoPanel').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading creator info:', error);
+            });
+    }
+
+    function generateResponse() {
+        const formData = {
+            creator_key: document.getElementById('creatorSelect').value,
+            fan_status: document.querySelector('input[name="fanStatus"]:checked').value,
+            fan_message: document.getElementById('fanMessage').value,
+            fan_id: document.getElementById('fanId').value,
+            existing_notes: document.getElementById('existingNotes').value
+        };
+
+        // Show loading
+        loadingModal.show();
+
+        fetch('/api/generate_response', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingModal.hide();
+
+            if (data.success) {
+                // Display AI response
+                document.getElementById('aiResponse').textContent = data.ai_response;
+                document.getElementById('responsePanel').style.display = 'block';
+
+                // Display upselling suggestion if available
+                if (data.upsell_suggestion) {
+                    document.getElementById('upsellSuggestion').textContent = data.upsell_suggestion;
+                    document.getElementById('upsellPanel').style.display = 'block';
+                } else {
+                    document.getElementById('upsellPanel').style.display = 'none';
+                }
+
+                // Update fan profile display
+                updateFanProfile(data.fan_profile, data.next_kyc_step);
+
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            loadingModal.hide();
+            console.error('Error:', error);
+            alert('Error generating response. Please try again.');
+        });
+    }
+
+    function updateFanProfile(profile, nextStep) {
+        // Update KYC progress
+        const progressPercent = profile.phase0_completion;
+        document.getElementById('kycProgress').style.width = progressPercent + '%';
+        document.getElementById('kycProgress').textContent = progressPercent + '%';
+        document.getElementById('nextKycStep').textContent = nextStep ? `Next step: ${nextStep}` : 'Phase 0 Complete';
+
+        // Update profile fields
+        document.getElementById('fanType').textContent = profile.fan_type || 'Not classified';
+        document.getElementById('confidenceLevel').textContent = profile.confidence;
+        document.getElementById('personality').textContent = profile.personality || 'Not determined';
+        document.getElementById('purchaseInterest').textContent = profile.purchase_interest;
+        document.getElementById('fanNotes').textContent = profile.notes || 'No notes yet';
+
+        // Show fan profile panel
+        document.getElementById('fanProfilePanel').style.display = 'block';
+    }
+});
+</script>
+{% endblock %}
