@@ -13,16 +13,14 @@ def index():
 
 @app.route('/api/generate_response', methods=['POST'])
 def generate_response():
-    """Generate AI response with full debugging"""
+    """Generate AI response with safe response parsing"""
     try:
         print("=== DEBUG START ===")
         
-        # Check if we receive data
         data = request.get_json()
         print(f"Received data: {data}")
         
         if not data:
-            print("ERROR: No data received")
             return jsonify({'success': False, 'error': 'No data received'}), 400
         
         creator = data.get('creator', '')
@@ -32,92 +30,100 @@ def generate_response():
         print(f"Creator: {creator}, Fan Type: {fan_type}, Message: {fan_message}")
         
         if not all([creator, fan_type, fan_message]):
-            print("ERROR: Missing fields")
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
-        # Check API key
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
-        print(f"API Key present: {bool(api_key)}")
-        print(f"API Key first 10 chars: {api_key[:10] if api_key else 'None'}")
-        
         if not api_key:
-            print("ERROR: No API key")
             return jsonify({'success': False, 'error': 'API key not configured'}), 500
         
-        # Simple test prompt
-        simple_prompt = f"Respond as {creator} to this message: {fan_message}. Keep it under 100 characters."
-        print(f"Using prompt: {simple_prompt}")
-        
-        # Minimal API call
-        headers = {'Content-Type': 'application/json'}
-        payload = {
-            "contents": [{"parts": [{"text": simple_prompt}]}],
-            "generationConfig": {"maxOutputTokens": 100}
+        # Creator-specific prompts
+        creator_prompts = {
+            'ella': f"You are Ella Blair, a bubbly Brazilian OnlyFans creator. Respond warmly to: '{fan_message}' and ask for their name. Use ☀️💖 emojis. Keep under 150 characters.",
+            'vanp': f"You are Vanp, a confident tattooed Brazilian OnlyFans creator. Respond with intelligent dominance to: '{fan_message}' and ask for their name. Use 🔥😏 emojis. Keep under 150 characters.",
+            'yana': f"You are Yana Sinner, an artistic nerdy OnlyFans creator. Respond creatively to: '{fan_message}' and ask for their name. Use 🎨✨ emojis. Keep under 150 characters.",
+            'venessa': f"You are Venessa, a Latina gamer girl OnlyFans creator. Respond energetically to: '{fan_message}' and ask for their name. Use 💃🎮 emojis. Keep under 150 characters."
         }
         
-        print("Making API call...")
+        prompt = creator_prompts.get(creator, creator_prompts['ella'])
+        print(f"Using prompt for {creator}")
         
-        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}"
-        print(f"API URL: {api_url[:100]}...")
+        headers = {'Content-Type': 'application/json'}
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"maxOutputTokens": 150, "temperature": 0.8}
+        }
         
         response = requests.post(
-            api_url,
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
             timeout=60
         )
         
         print(f"API Response Status: {response.status_code}")
-        print(f"API Response Headers: {dict(response.headers)}")
-        print(f"API Response Text: {response.text[:500]}")
         
         if response.status_code == 200:
             result = response.json()
-            print(f"JSON Result keys: {result.keys() if result else 'No result'}")
+            print(f"Full API result: {result}")
             
             if 'candidates' in result and len(result['candidates']) > 0:
-                ai_response = result['candidates'][0]['content']['parts'][0]['text'].strip()
-                print(f"AI Response: {ai_response}")
+                candidate = result['candidates'][0]
+                print(f"Candidate structure: {candidate}")
                 
-                return jsonify({
-                    'success': True,
-                    'response': ai_response,
-                    'creator': creator,
-                    'fan_type': fan_type,
-                    'debug': 'Success!',
-                    'ai_model': 'Gemini 2.5 Pro Preview'
-                })
+                # Safe response parsing
+                ai_response = ""
+                try:
+                    if 'content' in candidate:
+                        content = candidate['content']
+                        if 'parts' in content and len(content['parts']) > 0:
+                            ai_response = content['parts'][0]['text'].strip()
+                        elif 'text' in content:
+                            ai_response = content['text'].strip()
+                        else:
+                            ai_response = str(content)
+                    elif 'text' in candidate:
+                        ai_response = candidate['text'].strip()
+                    else:
+                        ai_response = str(candidate)
+                        
+                    print(f"Extracted AI response: {ai_response}")
+                    
+                    if ai_response:
+                        return jsonify({
+                            'success': True,
+                            'response': ai_response,
+                            'creator': creator,
+                            'fan_type': fan_type,
+                            'kyc_step': 'Phase 0 - Step 1: Name Collection',
+                            'framework': 'Saints & Sinners Framework Active',
+                            'ai_model': 'Gemini 2.5 Pro Preview'
+                        })
+                    else:
+                        return jsonify({
+                            'success': False,
+                            'error': 'Empty AI response',
+                            'debug_candidate': candidate
+                        }), 500
+                        
+                except Exception as parse_error:
+                    print(f"Parse error: {parse_error}")
+                    return jsonify({
+                        'success': False,
+                        'error': f'Response parsing error: {str(parse_error)}',
+                        'raw_candidate': candidate
+                    }), 500
             else:
-                print("ERROR: No candidates in response")
-                print(f"Full result: {result}")
                 return jsonify({
                     'success': False,
-                    'error': 'No AI response generated',
-                    'debug_response': result
+                    'error': 'No candidates in response',
+                    'debug_result': result
                 }), 500
         else:
-            print(f"ERROR: API returned {response.status_code}")
-            print(f"Error response: {response.text}")
             return jsonify({
                 'success': False,
-                'error': f'API Error {response.status_code}',
-                'api_response': response.text[:200]
+                'error': f'API Error {response.status_code}: {response.text[:200]}'
             }), 500
             
-    except requests.exceptions.Timeout:
-        print("ERROR: Request timeout")
-        return jsonify({
-            'success': False,
-            'error': 'AI request timeout - please try again'
-        }), 504
-        
-    except requests.exceptions.RequestException as e:
-        print(f"ERROR: Request exception: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': f'Network error: {str(e)}'
-        }), 500
-        
     except Exception as e:
         print(f"EXCEPTION: {str(e)}")
         import traceback
@@ -137,7 +143,7 @@ def test_ai():
         
         headers = {'Content-Type': 'application/json'}
         payload = {
-            "contents": [{"parts": [{"text": "Say hello as Ella Blair in a bubbly way"}]}]
+            "contents": [{"parts": [{"text": "Say hello"}]}]
         }
         
         response = requests.post(
@@ -156,42 +162,6 @@ def test_ai():
         
     except Exception as e:
         return jsonify({'error': str(e)})
-
-@app.route('/api/creator_info/<creator_key>')
-def get_creator_info(creator_key: str):
-    """Get creator profile information"""
-    creator_info = {
-        'ella': {
-            'name': 'Ella Blair',
-            'niche': 'Authentic Brazilian GFE / Sweet Submissive / Flexible',
-            'personality': 'Bubbly, Outgoing, Caring, Resilient, Submissive',
-            'communication': 'Warm, enthusiastic, grateful with Portuguese touches'
-        },
-        'vanp': {
-            'name': 'Vanp',
-            'niche': 'Inked Maverick Muse / Dominant Brazilian / Anal Expert',
-            'personality': 'Intelligent, Dominant, Bratty, Resilient, Artistic',
-            'communication': 'Confident, teasing, commands respect'
-        },
-        'yana': {
-            'name': 'Yana Sinner',
-            'niche': 'Artist / Nerdy / Alt / Lingerie Designer',
-            'personality': 'Creative, Intelligent, Witty, Genuine, Reserved',
-            'communication': 'Creative language, gaming/art references'
-        },
-        'venessa': {
-            'name': 'Venessa',
-            'niche': 'Latina Gamer Girl / Creative & Nerdy / Petite & Flexible',
-            'personality': 'Creative, Passionate, Sweet, Playful, Empathetic',
-            'communication': 'Bright, energetic with Spanish touches'
-        }
-    }
-    
-    info = creator_info.get(creator_key)
-    if not info:
-        return jsonify({'success': False, 'error': 'Creator not found'}), 404
-    
-    return jsonify({'success': True, 'creator': info})
 
 @app.errorhandler(404)
 def not_found(error):
