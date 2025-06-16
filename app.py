@@ -187,7 +187,7 @@ Generate an authentic response as {profile['name']} that naturally advances the 
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
-            timeout=30
+            timeout=200
         )
         
         if response.status_code == 200:
@@ -245,7 +245,7 @@ def test_ai():
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
-            timeout=15
+            timeout=200
         )
         
         return jsonify({
