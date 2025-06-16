@@ -184,7 +184,7 @@ Generate an authentic response as {profile['name']} that naturally advances the 
         }
         
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
             timeout=30
@@ -242,7 +242,7 @@ def test_ai():
         }
         
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
             timeout=15
@@ -252,7 +252,7 @@ def test_ai():
             'status_code': response.status_code,
             'response_text': response.text[:1000] if response.text else 'No response text',
             'api_key_present': bool(api_key),
-            'model': 'gemini-2.5-pro (Gemini 2.5 Pro)'
+            'model': 'gemini-2.5-pro-preview-06-05 (Gemini 2.5 Pro)'
         })
         
     except Exception as e:
