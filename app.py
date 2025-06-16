@@ -278,3 +278,34 @@ def internal_error(error):
 
 if __name__ == '__main__':
     app.run(debug=Config.DEBUG, host='0.0.0.0', port=5000)
+@app.route('/api/generate_response', methods=['POST'])
+def generate_response():
+    try:
+        data = request.get_json()
+        creator_key = data.get('creator')
+        fan_type = data.get('fan_type')
+        fan_message = data.get('fan_message')
+        
+        # Get creator profile
+        from models import CREATOR_PROFILES
+        creator = CREATOR_PROFILES.get(creator_key)
+        
+        if not creator:
+            return jsonify({'error': 'Creator not found'}), 404
+        
+        # Simple response generation for now
+        if creator_key == 'ella':
+            response = f"Hey there! ☀️ My day is amazing now that you're here! What's your name, cutie? I love meeting new people! 😊✨"
+        elif creator_key == 'vanp':
+            response = f"Well hello there 😏 I appreciate the compliment, but I'm curious - what's your name? I like to know who I'm talking to 🔥"
+        else:
+            response = f"Hey! Thanks for reaching out! What's your name? I'd love to get to know you better! 💖"
+        
+        return jsonify({
+            'response': response,
+            'creator': creator_key,
+            'fan_type': fan_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
