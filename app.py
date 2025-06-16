@@ -13,140 +13,115 @@ def index():
 
 @app.route('/api/generate_response', methods=['POST'])
 def generate_response():
-    """Generate AI response using Gemini 2.5 Pro - Simplified Version"""
+    """Generate AI response with full debugging"""
     try:
+        print("=== DEBUG START ===")
+        
+        # Check if we receive data
         data = request.get_json()
+        print(f"Received data: {data}")
         
         if not data:
+            print("ERROR: No data received")
             return jsonify({'success': False, 'error': 'No data received'}), 400
         
         creator = data.get('creator', '')
         fan_type = data.get('fan_type', '')
         fan_message = data.get('fan_message', '')
         
+        print(f"Creator: {creator}, Fan Type: {fan_type}, Message: {fan_message}")
+        
         if not all([creator, fan_type, fan_message]):
+            print("ERROR: Missing fields")
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
-        # Get API key
+        # Check API key
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
+        print(f"API Key present: {bool(api_key)}")
+        print(f"API Key first 10 chars: {api_key[:10] if api_key else 'None'}")
+        
         if not api_key:
+            print("ERROR: No API key")
             return jsonify({'success': False, 'error': 'API key not configured'}), 500
         
-        # Simple creator-specific prompts with Saints & Sinners KYC Phase 0
-        creator_prompts = {
-            'ella': f"""You are Ella Blair, a bubbly, sweet Brazilian OnlyFans creator. 
-
-PERSONALITY: Sunny, caring, submissive, authentic. Always positive and warm.
-COMMUNICATION: Use ☀️💖😊✨ emojis. Light Portuguese phrases (Oi, Obrigada). Enthusiastic!
-
-SAINTS & SINNERS OBJECTIVE: You need to collect the fan's NAME (KYC Phase 0, Step 1).
-
-Fan message: "{fan_message}"
-
-Respond warmly as Ella, acknowledge their message, and naturally ask for their name. Keep under 200 characters.""",
-
-            'vanp': f"""You are Vanp, a confident, intelligent, tattooed Brazilian OnlyFans creator.
-
-PERSONALITY: Dominant, witty, bratty streak. 37 looks 25. Commands respect.
-COMMUNICATION: Use 🔥😏💋 emojis. Confident, teasing tone.
-
-SAINTS & SINNERS OBJECTIVE: You need to collect the fan's NAME (KYC Phase 0, Step 1).
-
-Fan message: "{fan_message}"
-
-Respond with intelligent confidence as Vanp, acknowledge their message, and ask for their name. Keep under 200 characters.""",
-
-            'yana': f"""You are Yana Sinner, an artistic, nerdy OnlyFans creator and lingerie designer.
-
-PERSONALITY: Creative, intelligent, witty, genuine. SuicideGirls model.
-COMMUNICATION: Use 🎨🎮✨ emojis. Creative language, gaming/art references.
-
-SAINTS & SINNERS OBJECTIVE: You need to collect the fan's NAME (KYC Phase 0, Step 1).
-
-Fan message: "{fan_message}"
-
-Respond creatively as Yana, acknowledge their message, and ask for their name. Keep under 200 characters.""",
-
-            'venessa': f"""You are Venessa, a vibrant Latina gamer girl OnlyFans creator.
-
-PERSONALITY: Sweet but spicy, energetic, empathetic. Petite, flexible.
-COMMUNICATION: Use 💃🎮✨ emojis. Spanish touches (Hola, amor). Bright energy!
-
-SAINTS & SINNERS OBJECTIVE: You need to collect the fan's NAME (KYC Phase 0, Step 1).
-
-Fan message: "{fan_message}"
-
-Respond energetically as Venessa, acknowledge their message, and ask for their name. Keep under 200 characters."""
-        }
+        # Simple test prompt
+        simple_prompt = f"Respond as {creator} to this message: {fan_message}. Keep it under 100 characters."
+        print(f"Using prompt: {simple_prompt}")
         
-        prompt = creator_prompts.get(creator, creator_prompts['ella'])
-        
-        # API call to Gemini 2.5 Pro
+        # Minimal API call
         headers = {'Content-Type': 'application/json'}
         payload = {
-            "contents": [{
-                "parts": [{
-                    "text": prompt
-                }]
-            }],
-            "generationConfig": {
-                "maxOutputTokens": 200,
-                "temperature": 0.8,
-                "topK": 40,
-                "topP": 0.9
-            }
+            "contents": [{"parts": [{"text": simple_prompt}]}],
+            "generationConfig": {"maxOutputTokens": 100}
         }
         
+        print("Making API call...")
+        
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}"
+        print(f"API URL: {api_url[:100]}...")
+        
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
+            api_url,
             headers=headers,
             json=payload,
             timeout=60
         )
         
+        print(f"API Response Status: {response.status_code}")
+        print(f"API Response Headers: {dict(response.headers)}")
+        print(f"API Response Text: {response.text[:500]}")
+        
         if response.status_code == 200:
             result = response.json()
+            print(f"JSON Result keys: {result.keys() if result else 'No result'}")
             
             if 'candidates' in result and len(result['candidates']) > 0:
                 ai_response = result['candidates'][0]['content']['parts'][0]['text'].strip()
-                
-                # Ensure character limit
-                if len(ai_response) > 250:
-                    ai_response = ai_response[:247] + "..."
+                print(f"AI Response: {ai_response}")
                 
                 return jsonify({
                     'success': True,
                     'response': ai_response,
                     'creator': creator,
                     'fan_type': fan_type,
-                    'kyc_step': 'Phase 0 - Step 1: Name Collection',
-                    'framework': 'Saints & Sinners Framework Active',
-                    'ai_model': 'Google Gemini 2.5 Pro Preview'
+                    'debug': 'Success!',
+                    'ai_model': 'Gemini 2.5 Pro Preview'
                 })
             else:
+                print("ERROR: No candidates in response")
+                print(f"Full result: {result}")
                 return jsonify({
                     'success': False,
-                    'error': 'No AI response generated'
+                    'error': 'No AI response generated',
+                    'debug_response': result
                 }), 500
         else:
+            print(f"ERROR: API returned {response.status_code}")
+            print(f"Error response: {response.text}")
             return jsonify({
                 'success': False,
-                'error': f'API Error {response.status_code}: {response.text[:200]}'
+                'error': f'API Error {response.status_code}',
+                'api_response': response.text[:200]
             }), 500
             
     except requests.exceptions.Timeout:
+        print("ERROR: Request timeout")
         return jsonify({
             'success': False,
             'error': 'AI request timeout - please try again'
         }), 504
         
     except requests.exceptions.RequestException as e:
+        print(f"ERROR: Request exception: {str(e)}")
         return jsonify({
             'success': False,
             'error': f'Network error: {str(e)}'
         }), 500
         
     except Exception as e:
+        print(f"EXCEPTION: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'Server error: {str(e)}'
