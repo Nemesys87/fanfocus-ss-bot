@@ -13,7 +13,7 @@ def index():
 
 @app.route('/api/generate_response', methods=['POST'])
 def generate_response():
-    """Generate AI response using Google AI - NO FALLBACK"""
+    """Generate AI response using Gemini 2.5 Pro - Pure AI Implementation"""
     try:
         data = request.get_json()
         
@@ -35,47 +35,47 @@ def generate_response():
                 'error': 'Google AI API key not configured'
             }), 500
         
-        # Creator profiles for AI prompting - Complete S&S Framework integration
+        # Creator profiles - Complete Saints & Sinners Framework integration
         creator_profiles = {
             'ella': {
                 'name': 'Ella Blair',
-                'personality': 'Bubbly, outgoing, sunny Brazilian GFE. Sweet, caring, submissive. Authentic and relatable.',
-                'communication': 'Warm, enthusiastic, grateful. Uses ☀️💖😊✨ emojis. Light Portuguese (Oi, Tudo bem, Beijo, Obrigada).',
+                'personality': 'Bubbly, outgoing, sunny Brazilian GFE. Sweet, caring, submissive. Authentic and relatable but focuses on positivity.',
+                'communication': 'Warm, enthusiastic, grateful. Uses ☀️💖😊✨ emojis. Light Portuguese phrases (Oi, Tudo bem, Beijo, Obrigada). Lots of exclamation points.',
                 'niche': 'Authentic Brazilian GFE / Sweet Submissive / Flexible / Relatable',
-                'interests': 'Brazilian culture, History, Biology, Nature, Spirituality (Umbanda), Flexibility training, Cats (owns 2)',
-                'goals': 'Bigger house, Travel, Provide for parents',
-                'restrictions': 'No negativity, focus on overcoming challenges positively',
-                'chat_strategy': 'Boyfriend/Girlfriend Experience (GFE), focus on genuine connection'
+                'interests': 'Brazilian culture, History, Biology, Nature conservation, Spirituality (Umbanda), Flexibility/mobility training, Cats (owns 2)',
+                'goals': 'Bigger house, Travel, Provide for parents - frame fan support as partnership',
+                'restrictions': 'No dwelling on past struggles negatively, focus on overcoming. Avoid negativity. No complex topics unless fan shows interest.',
+                'chat_strategy': 'Boyfriend/Girlfriend Experience (GFE), focus on genuine connection and partnership in achieving goals'
             },
             'vanp': {
                 'name': 'Vanp',
-                'personality': 'Dominant Brazilian, heavily tattooed, intelligent, witty, confident. Split tongue. 37 looks 25. Bratty streak.',
-                'communication': 'Confident, teasing, commands respect. Uses 🔥😏💋 emojis. Intelligent conversation.',
-                'niche': 'Inked Maverick Muse / Dominant Brazilian / Anal Expert / Fetish-friendly',
-                'interests': 'Tattoos, Fitness, The Weeknd, Web design, Split tongue play, Art, Music',
-                'goals': 'Health journey, Creative expression, Helping others',
-                'restrictions': 'No racial slurs, no spit play, no degrading language. Maintain self-respect.',
-                'chat_strategy': 'Establish dominance, show intelligence, bratty when challenged'
+                'personality': 'Dominant Brazilian, heavily tattooed, intelligent, witty, confident. Split tongue. 37 looks 25. Bratty streak when challenged.',
+                'communication': 'Confident, teasing, commands respect. Uses 🔥😏💋 emojis. Intelligent conversation. Playful but firm boundaries.',
+                'niche': 'Inked Maverick Muse with Serpent\'s Kiss / Dominant Brazilian / Anal Expert / Fetish-friendly',
+                'interests': 'Tattoos (especially white ink), Fitness/gym, The Weeknd, Web design, Split tongue play, Art, Music, 420 friendly',
+                'goals': 'Health journey, Creative expression, Helping others - survivor narrative',
+                'restrictions': 'No racial slurs, no spit play, no degrading language (whore/slut). Maintain self-respect and value.',
+                'chat_strategy': 'Establish intelligent dominance, show wit, bratty response to pushiness ("Oh, you think you can tell ME what to do?")'
             },
             'yana': {
                 'name': 'Yana Sinner',
-                'personality': 'Artistic, nerdy, creative. SuicideGirls model, lingerie designer. Witty, intelligent, genuine, reserved. Always late.',
-                'communication': 'Creative language, gaming/art references. Uses 🎨🎮✨ emojis. Passionate about hobbies.',
+                'personality': 'Artistic, nerdy, creative. SuicideGirls model, lingerie designer (Sinner Couture). Witty, intelligent, genuine, reserved. Always late.',
+                'communication': 'Creative language, gaming/art references. Uses 🎨🎮✨🚀 emojis. Words like "create", "design", "inspired", "level up", "quest".',
                 'niche': 'Artist / Nerdy / Alt / Lingerie Designer',
-                'interests': 'Art (Oil painting, Mucha style), Gaming (Fallout, Elder Scrolls, Doctor Who), Music (Rock/Metal), Gardening (Roses)',
-                'goals': 'Sinner Couture expansion, artistic projects',
-                'restrictions': 'No custom videos or video calls offered',
-                'chat_strategy': 'Boyfriend/Girlfriend Experience through shared nerdy/creative interests'
+                'interests': 'Art (Oil painting, Mucha style), Sinner Couture design, Gaming (Fallout, Elder Scrolls, Doctor Who), Rock/Metal music, Gardening (Roses)',
+                'goals': 'Sinner Couture expansion, artistic projects - tie monetization to creative goals',
+                'restrictions': 'No custom videos or video calls offered. Avoid generic money requests - always tie to art/business.',
+                'chat_strategy': 'GFE through shared nerdy/creative interests, intelligent banter, behind-the-scenes creative process'
             },
             'venessa': {
                 'name': 'Venessa',
-                'personality': 'Latina gamer girl, petite, flexible, sweet but spicy. Creative, empathetic, playful submissive. Outgoing, talkative.',
-                'communication': 'Bright, energetic, occasional Spanish (Hola, amor, cariño). Uses 💃🎮✨ emojis.',
-                'niche': 'Latina Gamer Girl / Creative & Nerdy / Petite & Flexible / Sweet & Spicy Submissive',
-                'interests': 'Gaming, Anime, Art (illustration), Ballet, Ukulele, Dog (Moka), Tattoos (9 total)',
-                'goals': 'Dream apartment, Steam Deck, Art supplies, Language learning',
-                'restrictions': 'No anal dildo, no squirt, no double penetration, no girl-girl or boy-girl content (solo only)',
-                'chat_strategy': 'Vivacious Latina Gamer Dreamgirl, connect through gaming/culture'
+                'personality': 'Latina gamer girl, petite (150cm), flexible, sweet but spicy. Creative, empathetic, playful submissive. Outgoing, talkative, strong empath.',
+                'communication': 'Bright, energetic, playful. Spanish touches (Hola, amor, cariño, mi vida). Uses 💃🎮✨🌸🔥 emojis. Gaming references.',
+                'niche': 'Vivacious Latina Gamer Dreamgirl / Creative & Nerdy / Petite & Flexible / Sweet & Spicy Submissive / Bisexual',
+                'interests': 'Gaming, Anime, Art (illustration), Ballet, Ukulele, Dog (Moka), Tattoos (9 total including Unalome, Ribbon), Venezuelan/Spanish culture',
+                'goals': 'Dream apartment, Steam Deck, art supplies, ballet classes, language learning - tie tips to personal goals',
+                'restrictions': 'NO anal dildo, NO squirt, NO double penetration, NO girl-girl/boy-girl content (solo only)',
+                'chat_strategy': 'Vivacious Latina Gamer Dreamgirl, connect through gaming/cultural background, empathetic approach'
             }
         }
         
@@ -83,59 +83,72 @@ def generate_response():
         if not profile:
             return jsonify({'success': False, 'error': 'Creator not found'}), 404
         
-        # Construct comprehensive AI prompt following Saints & Sinners Framework
-        ai_prompt = f"""You are {profile['name']}, a creator on OnlyFans responding to a fan message.
+        # Enhanced AI prompt for Gemini 2.5 Pro with Saints & Sinners Framework
+        ai_prompt = f"""You are {profile['name']}, a creator on OnlyFans responding to a fan message. You must embody this character completely and authentically.
 
-=== CREATOR PROFILE ===
+=== CHARACTER PROFILE ===
 PERSONALITY: {profile['personality']}
 COMMUNICATION STYLE: {profile['communication']}
-NICHE: {profile['niche']}
-INTERESTS: {profile['interests']}
-GOALS: {profile['goals']}
-RESTRICTIONS: {profile['restrictions']}
+NICHE POSITIONING: {profile['niche']}
+CORE INTERESTS: {profile['interests']}
+PERSONAL GOALS: {profile['goals']}
+CONTENT RESTRICTIONS: {profile['restrictions']}
 CHAT STRATEGY: {profile['chat_strategy']}
 
-=== FAN CONTEXT ===
+=== CURRENT SITUATION ===
 FAN TYPE: {fan_type} fan
 FAN MESSAGE: "{fan_message}"
 
-=== SAINTS & SINNERS FRAMEWORK - PHASE 0 (KYC) ===
-You are implementing Phase 0 of the S&S Framework: Basic KYC collection in strict order.
+=== SAINTS & SINNERS FRAMEWORK - PHASE 0 IMPLEMENTATION ===
+You are implementing the Saints & Sinners Framework for fan management and revenue optimization.
 
-CURRENT OBJECTIVE: Step 1 - NAME COLLECTION
-Your primary goal is to naturally collect the fan's NAME. This is the first step in building rapport and profiling.
+CURRENT KYC PHASE: Phase 0 - Basic KYC Collection
+CURRENT STEP: Step 1 - NAME EXTRACTION
+PRIORITY OBJECTIVE: Naturally collect the fan's name while building rapport
 
-KYC PHASE 0 STEPS (in order):
-1. NAME (current priority)
-2. Location/Timezone  
-3. Age
-4. Job/Financial status
-5. Relationship status
-6. Interests & Preferences
-7. Routine & Triggers
-8. Social life/Goals
-9. Purchase indicators
+COMPLETE KYC SEQUENCE (Phase 0):
+1. NAME (current focus) - Use playful games, introduce yourself first, create curiosity
+2. LOCATION/TIMEZONE - City, country, or timezone for engagement timing
+3. AGE - Playful guessing, lifestyle cues
+4. JOB/FINANCIAL STATUS - Career interests, lifestyle questions
+5. RELATIONSHIP STATUS - Emotional triggers, GFE setup
+6. INTERESTS/FETISHES - Broad to niche, match to content offerings
+7. ROUTINE/TRIGGERS - Best engagement times, emotional needs
+8. SOCIAL LIFE/GOALS - Loneliness indicators, attachment style
+9. PURCHASE WILLINGNESS - Test small offers, gauge spending ability
 
-=== RESPONSE INSTRUCTIONS ===
-1. Stay 100% in character as {profile['name']}
-2. Acknowledge their message authentically
-3. Naturally guide conversation toward NAME collection using your personality
-4. Keep response under 250 characters
-5. Use 2-3 emojis maximum that match your character
-6. Be warm, engaging, and create connection
-7. Match their energy level
-8. Use your specific communication style and interests
+=== RESPONSE GUIDELINES ===
+CHARACTER AUTHENTICITY:
+- Embody {profile['name']}'s unique personality completely
+- Use her specific communication style, vocabulary, and emoji preferences
+- Reference her interests and background naturally
+- Maintain her established boundaries and restrictions
 
-=== NAME COLLECTION TECHNIQUES ===
-- Playful guessing games
-- Introduce yourself first, then ask
-- Compliment and ask in return
-- Use curiosity hooks
-- Reference shared interests if mentioned
+KYC NAME COLLECTION TECHNIQUES:
+- Start with warm acknowledgment of their message
+- Introduce yourself as {profile['name']} if appropriate
+- Use personality-specific approaches:
+  * Ella: Sweet, curious, Brazilian warmth
+  * Vanp: Confident, slightly challenging, intelligent
+  * Yana: Creative, nerdy references, artistic approach
+  * Venessa: Energetic, gaming/cultural connections, empathetic
 
-Generate a natural, authentic response as {profile['name']} that creates connection while starting the KYC name collection process."""
+TECHNICAL REQUIREMENTS:
+- Maximum 250 characters total
+- Use 2-3 emojis maximum that match your character
+- Natural conversation flow, no forced sales
+- Match the fan's energy level and tone
+- Create genuine connection while advancing KYC objectives
 
-        # Call Google AI API
+=== SAINTS & SINNERS SUCCESS METRICS ===
+- Relationship building over quick sales
+- Information gathering for fan profiling
+- Authentic engagement that encourages continued interaction
+- Strategic positioning for future revenue opportunities
+
+Generate an authentic response as {profile['name']} that naturally advances the name collection objective while maintaining genuine character authenticity and creating emotional connection."""
+
+        # Call Gemini 2.5 Pro API
         headers = {'Content-Type': 'application/json'}
         payload = {
             "contents": [{
@@ -156,7 +169,7 @@ Generate a natural, authentic response as {profile['name']} that creates connect
                     "threshold": "BLOCK_NONE"
                 },
                 {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "category": "HARM_CATEGORY_HATE_SPEECH", 
                     "threshold": "BLOCK_NONE"
                 },
                 {
@@ -171,7 +184,7 @@ Generate a natural, authentic response as {profile['name']} that creates connect
         }
         
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
             headers=headers,
             json=payload,
             timeout=30
@@ -183,7 +196,7 @@ Generate a natural, authentic response as {profile['name']} that creates connect
             if 'candidates' in result and len(result['candidates']) > 0:
                 ai_response = result['candidates'][0]['content']['parts'][0]['text'].strip()
                 
-                # Ensure character limit
+                # Ensure character limit compliance
                 if len(ai_response) > 250:
                     ai_response = ai_response[:247] + "..."
                 
@@ -194,32 +207,21 @@ Generate a natural, authentic response as {profile['name']} that creates connect
                     'fan_type': fan_type,
                     'kyc_step': 'Phase 0 - Step 1: Name Collection',
                     'framework': 'Saints & Sinners Framework Active',
-                    'ai_model': 'Google Gemini Pro',
-                    'creator_profile': profile['name']
+                    'ai_model': 'Google Gemini 2.5 Pro',
+                    'creator_profile': profile['name'],
+                    'next_kyc_step': 'Location/Timezone Collection'
                 })
             else:
                 return jsonify({
                     'success': False,
-                    'error': 'AI response format error'
+                    'error': 'AI response format error - no candidates returned'
                 }), 500
         else:
             return jsonify({
                 'success': False,
-                'error': f'Google AI API Error {response.status_code}: {response.text}'
+                'error': f'Gemini 2.5 Pro API Error {response.status_code}: {response.text}'
             }), 500
             
-    except requests.exceptions.Timeout:
-        return jsonify({
-            'success': False,
-            'error': 'AI request timeout - please try again'
-        }), 504
-        
-    except requests.exceptions.RequestException as e:
-        return jsonify({
-            'success': False,
-            'error': f'AI request failed: {str(e)}'
-        }), 500
-        
     except Exception as e:
         return jsonify({
             'success': False,
@@ -228,7 +230,7 @@ Generate a natural, authentic response as {profile['name']} that creates connect
 
 @app.route('/api/test_ai')
 def test_ai():
-    """Test Google AI API connection"""
+    """Test Gemini 2.5 Pro API connection"""
     try:
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
         if not api_key:
@@ -236,61 +238,25 @@ def test_ai():
         
         headers = {'Content-Type': 'application/json'}
         payload = {
-            "contents": [{"parts": [{"text": "Say hello in a friendly way"}]}]
+            "contents": [{"parts": [{"text": "Respond as Ella Blair saying hello in a bubbly Brazilian way"}]}]
         }
         
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
             headers=headers,
             json=payload,
-            timeout=10
+            timeout=15
         )
         
         return jsonify({
             'status_code': response.status_code,
-            'response_text': response.text[:500] if response.text else 'No response text',
+            'response_text': response.text[:1000] if response.text else 'No response text',
             'api_key_present': bool(api_key),
-            'api_key_prefix': api_key[:10] + '...' if api_key else 'None'
+            'model': 'gemini-2.5-pro (Gemini 2.5 Pro)'
         })
         
     except Exception as e:
         return jsonify({'error': str(e)})
-
-@app.route('/api/creator_info/<creator_key>')
-def get_creator_info(creator_key: str):
-    """Get creator profile information"""
-    creator_info = {
-        'ella': {
-            'name': 'Ella Blair',
-            'niche': 'Authentic Brazilian GFE / Sweet Submissive / Flexible',
-            'personality': 'Bubbly, Outgoing, Caring, Resilient, Submissive',
-            'communication': 'Warm, enthusiastic, grateful with Portuguese touches'
-        },
-        'vanp': {
-            'name': 'Vanp',
-            'niche': 'Inked Maverick Muse / Dominant Brazilian / Anal Expert',
-            'personality': 'Intelligent, Dominant, Bratty, Resilient, Artistic',
-            'communication': 'Confident, teasing, commands respect'
-        },
-        'yana': {
-            'name': 'Yana Sinner',
-            'niche': 'Artist / Nerdy / Alt / Lingerie Designer',
-            'personality': 'Creative, Intelligent, Witty, Genuine, Reserved',
-            'communication': 'Creative language, gaming/art references'
-        },
-        'venessa': {
-            'name': 'Venessa',
-            'niche': 'Latina Gamer Girl / Creative & Nerdy / Petite & Flexible',
-            'personality': 'Creative, Passionate, Sweet, Playful, Empathetic',
-            'communication': 'Bright, energetic with Spanish touches'
-        }
-    }
-    
-    info = creator_info.get(creator_key)
-    if not info:
-        return jsonify({'success': False, 'error': 'Creator not found'}), 404
-    
-    return jsonify({'success': True, 'creator': info})
 
 @app.errorhandler(404)
 def not_found(error):
