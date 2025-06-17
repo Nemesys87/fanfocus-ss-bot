@@ -8,10 +8,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .response-container {
-            min-height: 150px;
+            min-height: 180px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px;
             color: white;
             position: relative;
             overflow: hidden;
@@ -21,7 +21,7 @@
             display: none;
             align-items: center;
             gap: 10px;
-            margin: 10px 0;
+            margin: 15px 0;
         }
         
         .typing-indicator.active {
@@ -61,105 +61,139 @@
         }
         
         .streaming-text {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             line-height: 1.6;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
-            padding: 15px;
-            margin-top: 10px;
-            min-height: 60px;
+            padding: 20px;
+            margin-top: 15px;
+            min-height: 80px;
             border-left: 4px solid #ffd700;
+            word-wrap: break-word;
         }
         
         .creator-badge {
             display: inline-block;
-            padding: 5px 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 25px;
             font-size: 0.9rem;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-weight: 500;
         }
         
         .status-indicator {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            padding: 5px 10px;
-            border-radius: 15px;
+            top: 20px;
+            right: 20px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 0.8rem;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
         }
         
         .btn-generate {
             background: linear-gradient(45deg, #ff6b6b, #ee5a24);
             border: none;
             border-radius: 25px;
-            padding: 12px 30px;
+            padding: 15px 35px;
             font-weight: bold;
+            font-size: 1.1rem;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .btn-generate:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
         }
         
         .btn-generate:disabled {
             background: #6c757d;
             transform: none;
+            box-shadow: none;
         }
         
         .form-section {
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
         }
         
         .copy-btn {
             position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.2);
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 0.8rem;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
         
         .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
         }
         
         .framework-info {
-            background: rgba(255, 215, 0, 0.1);
+            background: rgba(255, 215, 0, 0.15);
             border-left: 4px solid #ffd700;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
+            padding: 12px 16px;
+            margin-top: 15px;
+            border-radius: 8px;
             font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .streaming-toggle {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+        
+        .header-section h1 {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
         }
     </style>
 </head>
 <body class="bg-light">
-    <div class="container mt-5">
-        <div class="text-center mb-4">
-            <h1 class="display-4 fw-bold">🎯 FanFocusGPT</h1>
+    <div class="container mt-4">
+        <div class="header-section">
+            <h1 class="display-4">🎯 FanFocusGPT</h1>
             <p class="lead text-muted">Saints & Sinners AI Assistant with Real-Time Streaming</p>
+            <small class="text-muted">Powered by Gemini 2.5 Pro & S&S Framework</small>
         </div>
         
         <div class="row">
             <div class="col-md-6">
                 <div class="form-section">
-                    <h3 class="mb-4"><i class="fas fa-user-circle"></i> Creator & Fan Setup</h3>
+                    <h3 class="mb-4"><i class="fas fa-user-circle me-2"></i>Creator & Fan Setup</h3>
                     
                     <form id="fanfocus-form">
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label fw-bold">Creator Model</label>
-                            <select class="form-select" id="creator" required>
+                            <select class="form-select form-select-lg" id="creator" required>
                                 <option value="">Select Creator</option>
                                 <option value="ella">🇧🇷 Ella Blair - Brazilian GFE</option>
                                 <option value="vanp">🔥 Vanp - Dominant Bratty</option>
@@ -168,7 +202,7 @@
                             </select>
                         </div>
                         
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label fw-bold">Fan Type</label>
                             <div class="row">
                                 <div class="col-6">
@@ -186,23 +220,24 @@
                             </div>
                         </div>
                         
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label fw-bold">Fan Message</label>
-                            <textarea class="form-control" id="fan_message" rows="4" 
+                            <textarea class="form-control form-control-lg" id="fan_message" rows="4" 
                                 placeholder="Paste fan's message here..." required></textarea>
                         </div>
                         
-                        <div class="mb-3">
+                        <div class="streaming-toggle">
                             <div class="form-check">
                                 <input type="checkbox" id="enable_streaming" class="form-check-input" checked>
-                                <label for="enable_streaming" class="form-check-label">
+                                <label for="enable_streaming" class="form-check-label fw-bold">
                                     ⚡ Enable Real-Time Streaming
                                 </label>
+                                <small class="d-block text-muted mt-1">See responses generate in real-time like ChatGPT</small>
                             </div>
                         </div>
                         
                         <button type="submit" class="btn btn-generate text-white w-100" id="generate-btn">
-                            <i class="fas fa-magic"></i> Generate Response
+                            <i class="fas fa-magic me-2"></i>Generate Response
                         </button>
                     </form>
                 </div>
@@ -212,10 +247,10 @@
                 <div class="response-container">
                     <div class="status-indicator" id="status-indicator">Ready</div>
                     
-                    <h5><i class="fas fa-robot"></i> AI Response</h5>
+                    <h5><i class="fas fa-robot me-2"></i>AI Response</h5>
                     
                     <div class="creator-badge" id="creator-badge" style="display: none;">
-                        <i class="fas fa-user"></i> <span id="creator-name"></span>
+                        <i class="fas fa-user me-1"></i><span id="creator-name"></span>
                     </div>
                     
                     <div class="typing-indicator" id="typing-indicator">
@@ -229,15 +264,15 @@
                     </div>
                     
                     <div class="streaming-text" id="ai-response" style="display: none;">
-                        <!-- Streaming response will appear here -->
+                        <!-- Response will appear here -->
                     </div>
                     
                     <div class="framework-info" id="framework-info" style="display: none;">
-                        <strong>S&S Framework:</strong> <span id="kyc-step"></span>
+                        <strong><i class="fas fa-cogs me-1"></i>S&S Framework:</strong> <span id="kyc-step"></span>
                     </div>
                     
                     <button class="copy-btn" id="copy-btn" style="display: none;" onclick="copyResponse()">
-                        <i class="fas fa-copy"></i> Copy
+                        <i class="fas fa-copy me-1"></i>Copy
                     </button>
                 </div>
             </div>
@@ -263,6 +298,7 @@
             
             // Reset UI
             resetUI();
+            showCreatorBadge(creator);
             
             const formData = {
                 creator: creator,
@@ -283,29 +319,45 @@
             document.getElementById('ai-response').style.display = 'none';
             document.getElementById('copy-btn').style.display = 'none';
             document.getElementById('framework-info').style.display = 'none';
-            document.getElementById('creator-badge').style.display = 'none';
+            hideTypingIndicator();
             finalResponse = '';
         }
         
         function handleStreamingRequest(formData) {
+            updateStatus('Connecting');
+            showTypingIndicator('Connecting to AI...');
+            
+            // First, get the streaming URL
+            fetch('/api/generate_response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.streaming && data.stream_url) {
+                    // Connect to the streaming endpoint
+                    connectToStream(data.stream_url);
+                } else {
+                    showError('Failed to initialize streaming');
+                }
+            })
+            .catch(error => {
+                showError('Connection failed: ' + error.message);
+                // Fallback to regular mode
+                formData.streaming = false;
+                handleRegularRequest(formData);
+            });
+        }
+        
+        function connectToStream(streamUrl) {
             // Close any existing connection
             if (currentEventSource) {
                 currentEventSource.close();
             }
             
-            // Show typing indicator
-            showTypingIndicator('Connecting to AI...');
-            
-            // Create streaming request
-            const eventSource = new EventSource('/api/generate_response_stream');
+            const eventSource = new EventSource(streamUrl);
             currentEventSource = eventSource;
-            
-            // Send the data via POST first
-            fetch('/api/generate_response_stream', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
             
             eventSource.onmessage = function(event) {
                 try {
@@ -318,12 +370,12 @@
                     }
                     
                     if (data.status === 'starting') {
-                        showCreatorBadge(data.creator);
-                        showTypingIndicator(`${getCreatorName(data.creator)} is thinking...`);
-                        updateStatus('Thinking');
+                        updateStatus('Starting');
+                        showTypingIndicator(`${getCreatorName(data.creator)} is preparing...`);
                     }
                     
                     if (data.status === 'thinking') {
+                        updateStatus('Thinking');
                         showTypingIndicator(data.message);
                     }
                     
@@ -333,7 +385,7 @@
                         updateStatus('Generating');
                     }
                     
-                    if (data.chunk) {
+                    if (data.chunk && data.accumulated) {
                         appendToResponse(data.accumulated);
                     }
                     
@@ -341,7 +393,7 @@
                         finalResponse = data.final_response;
                         showFrameworkInfo(data.kyc_step);
                         showCopyButton();
-                        updateStatus('Complete');
+                        updateStatus('Complete ✓');
                         document.getElementById('generate-btn').disabled = false;
                         eventSource.close();
                     }
@@ -353,18 +405,15 @@
             
             eventSource.onerror = function(error) {
                 console.error('Streaming error:', error);
-                showError('Streaming connection failed. Falling back to regular mode...');
                 eventSource.close();
-                
-                // Fallback to regular request
-                formData.streaming = false;
-                handleRegularRequest(formData);
+                showError('Streaming failed. Try regular mode.');
+                document.getElementById('generate-btn').disabled = false;
             };
         }
         
         async function handleRegularRequest(formData) {
-            showTypingIndicator('Generating response...');
             updateStatus('Processing');
+            showTypingIndicator('Generating response...');
             
             try {
                 const response = await fetch('/api/generate_response', {
@@ -380,10 +429,9 @@
                 if (data.success) {
                     finalResponse = data.response;
                     showResponse(data.response);
-                    showCreatorBadge(data.creator);
-                    showFrameworkInfo('Phase 0 - Step 1: Name Collection');
+                    showFrameworkInfo(data.kyc_step || 'Phase 0 - Step 1: Name Collection');
                     showCopyButton();
-                    updateStatus('Complete');
+                    updateStatus('Complete ✓');
                 } else {
                     showError(data.error);
                 }
@@ -441,7 +489,7 @@
         
         function showError(error) {
             const responseEl = document.getElementById('ai-response');
-            responseEl.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> ${error}</div>`;
+            responseEl.innerHTML = `<div style="color: #ffcccb;"><i class="fas fa-exclamation-triangle me-2"></i>${error}</div>`;
             responseEl.style.display = 'block';
             updateStatus('Error');
         }
@@ -460,23 +508,17 @@
             if (finalResponse) {
                 navigator.clipboard.writeText(finalResponse).then(() => {
                     const btn = document.getElementById('copy-btn');
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
                     btn.style.background = 'rgba(40, 167, 69, 0.8)';
                     
                     setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.background = 'rgba(255, 255, 255, 0.2)';
+                        btn.innerHTML = originalHTML;
+                        btn.style.background = 'rgba(255, 255, 255, 0.25)';
                     }, 2000);
                 });
             }
         }
-        
-        // Auto-resize textarea
-        document.getElementById('fan_message').addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
     </script>
 </body>
 </html>
