@@ -17,7 +17,8 @@
             background: white;
             border-radius: 20px;
             padding: 40px;
-            margin: 20px;
+            margin: 20px auto;
+            max-width: 1200px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         
@@ -46,7 +47,7 @@
             border-radius: 15px;
             padding: 30px;
             color: white;
-            min-height: 200px;
+            min-height: 300px;
         }
         
         .btn-generate {
@@ -60,17 +61,20 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             width: 100%;
+            color: white;
         }
         
         .btn-generate:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            color: white;
         }
         
         .btn-generate:disabled {
-            background: #6c757d;
+            background: #6c757d !important;
             transform: none;
             box-shadow: none;
+            color: white;
         }
         
         .response-text {
@@ -78,21 +82,18 @@
             border-radius: 10px;
             padding: 20px;
             margin-top: 20px;
-            min-height: 100px;
+            min-height: 150px;
             border-left: 4px solid #ffd700;
             white-space: pre-wrap;
             word-wrap: break-word;
-        }
-        
-        .loading {
-            text-align: center;
-            opacity: 0.8;
+            font-size: 1.1rem;
+            line-height: 1.6;
         }
         
         .error {
-            color: #ffcccb;
-            background: rgba(255, 0, 0, 0.1);
-            border-left-color: #ff4444;
+            color: #ffcccb !important;
+            background: rgba(255, 0, 0, 0.1) !important;
+            border-left-color: #ff4444 !important;
         }
         
         .copy-btn {
@@ -100,7 +101,7 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
             border-radius: 10px;
-            padding: 8px 15px;
+            padding: 10px 20px;
             margin-top: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -108,32 +109,17 @@
         
         .copy-btn:hover {
             background: rgba(255, 255, 255, 0.35);
-        }
-        
-        .debug-info {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 15px;
-            font-size: 0.8rem;
-            font-family: monospace;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .streaming-badge {
-            background: linear-gradient(45deg, #28a745, #20c997);
             color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .railway-badge {
-            background: linear-gradient(45deg, #764ba2, #667eea);
+        .status-display {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .stable-badge {
+            background: linear-gradient(45deg, #28a745, #20c997);
             color: white;
             padding: 4px 8px;
             border-radius: 12px;
@@ -145,15 +131,14 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <div class="main-container">
             <div class="header-section">
                 <h1 class="display-4">🎯 FanFocusGPT</h1>
                 <p class="lead text-muted">Saints & Sinners AI Assistant</p>
                 <small class="text-muted">Powered by Gemini 2.5 Pro & S&S Framework</small>
                 <div class="mt-2">
-                    <span class="streaming-badge">🚀 Railway Optimized</span>
-                    <span class="railway-badge ms-2">⚡ Unlimited Streaming</span>
+                    <span class="stable-badge">✅ Railway Stable</span>
                 </div>
             </div>
             
@@ -162,57 +147,44 @@
                     <div class="form-section">
                         <h4 class="mb-4"><i class="fas fa-user-circle me-2"></i>Creator & Fan Setup</h4>
                         
-                        <form id="fanfocus-form">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Creator Model</label>
-                                <select class="form-select" id="creator" required>
-                                    <option value="">Select Creator</option>
-                                    <option value="ella">🇧🇷 Ella Blair - Brazilian GFE</option>
-                                    <option value="vanp">🔥 Vanp - Dominant Bratty</option>
-                                    <option value="yana">🎨 Yana Sinner - Artistic Nerdy</option>
-                                    <option value="venessa">💃 Venessa - Latina Gamer</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Fan Type</label>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="form-check">
-                                            <input type="radio" name="fan_type" value="new" id="new" class="form-check-input" required>
-                                            <label for="new" class="form-check-label">🆕 New Fan</label>
-                                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Creator Model</label>
+                            <select class="form-select form-select-lg" id="creator" required>
+                                <option value="">Select Creator</option>
+                                <option value="ella">🇧🇷 Ella Blair - Brazilian GFE</option>
+                                <option value="vanp">🔥 Vanp - Dominant Bratty</option>
+                                <option value="yana">🎨 Yana Sinner - Artistic Nerdy</option>
+                                <option value="venessa">💃 Venessa - Latina Gamer</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fan Type</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input type="radio" name="fan_type" value="new" id="new" class="form-check-input" required>
+                                        <label for="new" class="form-check-label">🆕 New Fan</label>
                                     </div>
-                                    <div class="col-6">
-                                        <div class="form-check">
-                                            <input type="radio" name="fan_type" value="existing" id="existing" class="form-check-input">
-                                            <label for="existing" class="form-check-label">👥 Existing Fan</label>
-                                        </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input type="radio" name="fan_type" value="existing" id="existing" class="form-check-input">
+                                        <label for="existing" class="form-check-label">👥 Existing Fan</label>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Fan Message</label>
-                                <textarea class="form-control" id="fan_message" rows="4" 
-                                    placeholder="Paste fan's message here..." required></textarea>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input type="checkbox" id="enable_streaming" class="form-check-input" checked>
-                                    <label for="enable_streaming" class="form-check-label">
-                                        ⚡ Enable Real-Time Streaming
-                                        <span class="streaming-badge ms-2">Railway Fixed</span>
-                                    </label>
-                                    <small class="d-block text-muted mt-1">Optimized for Railway deployment</small>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-generate text-white" id="generate-btn">
-                                <i class="fas fa-magic me-2"></i>Generate Response
-                            </button>
-                        </form>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Fan Message</label>
+                            <textarea class="form-control form-control-lg" id="fan_message" rows="4" 
+                                placeholder="Paste fan's message here..." required></textarea>
+                        </div>
+                        
+                        <button type="button" class="btn btn-generate" id="generate-btn">
+                            <i class="fas fa-magic me-2"></i>Generate Response
+                        </button>
                     </div>
                 </div>
                 
@@ -220,7 +192,7 @@
                     <div class="response-section">
                         <h4><i class="fas fa-robot me-2"></i>AI Response</h4>
                         
-                        <div id="status-display">Ready to generate...</div>
+                        <div class="status-display" id="status-display">Ready to generate response...</div>
                         
                         <div class="response-text" id="ai-response" style="display: none;">
                             <!-- Response will appear here -->
@@ -229,10 +201,6 @@
                         <button class="copy-btn" id="copy-btn" style="display: none;">
                             <i class="fas fa-copy me-1"></i>Copy Response
                         </button>
-                        
-                        <div class="debug-info" id="debug-info" style="display: none;">
-                            <!-- Debug info -->
-                        </div>
                     </div>
                 </div>
             </div>
@@ -240,18 +208,12 @@
     </div>
 
     <script>
-        // Debug function
-        function debugLog(message) {
-            console.log('FanFocus Debug:', message);
-            const debugDiv = document.getElementById('debug-info');
-            debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
-            debugDiv.style.display = 'block';
-        }
+        let finalResponse = '';
         
         // Status update function
         function updateStatus(message) {
             document.getElementById('status-display').textContent = message;
-            debugLog('Status: ' + message);
+            console.log('Status:', message);
         }
         
         // Show response function
@@ -262,149 +224,116 @@
             
             if (isError) {
                 responseDiv.classList.add('error');
+                document.getElementById('copy-btn').style.display = 'none';
             } else {
                 responseDiv.classList.remove('error');
                 document.getElementById('copy-btn').style.display = 'block';
+                finalResponse = text;
             }
         }
         
         // Copy function
-        let finalResponse = '';
         document.getElementById('copy-btn').addEventListener('click', function() {
             if (finalResponse) {
                 navigator.clipboard.writeText(finalResponse).then(() => {
                     this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+                    this.style.background = 'rgba(40, 167, 69, 0.8)';
                     setTimeout(() => {
                         this.innerHTML = '<i class="fas fa-copy me-1"></i>Copy Response';
+                        this.style.background = 'rgba(255, 255, 255, 0.25)';
                     }, 2000);
+                }).catch(err => {
+                    alert('Copy failed. Select and copy manually.');
                 });
             }
         });
         
-        // Main form handler
-        document.getElementById('fanfocus-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            debugLog('Form submitted');
+        // Generate button click handler
+        document.getElementById('generate-btn').addEventListener('click', async function() {
+            console.log('Generate button clicked');
             
             // Get form values
             const creator = document.getElementById('creator').value;
             const fanTypeEl = document.querySelector('input[name="fan_type"]:checked');
             const fanMessage = document.getElementById('fan_message').value;
-            const enableStreaming = document.getElementById('enable_streaming').checked;
             
-            debugLog(`Creator: ${creator}, Fan Type: ${fanTypeEl?.value}, Streaming: ${enableStreaming}`);
+            console.log('Values:', { creator, fanType: fanTypeEl?.value, fanMessage: fanMessage?.substring(0, 50) });
             
             // Validation
-            if (!creator || !fanTypeEl || !fanMessage) {
-                alert('Please fill all fields');
+            if (!creator) {
+                alert('Please select a creator');
                 return;
             }
             
-            // Reset UI
-            document.getElementById('generate-btn').disabled = true;
-            document.getElementById('generate-btn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+            if (!fanTypeEl) {
+                alert('Please select fan type');
+                return;
+            }
+            
+            if (!fanMessage.trim()) {
+                alert('Please enter fan message');
+                return;
+            }
+            
+            // Disable button and show loading
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+            
+            // Hide previous response
             document.getElementById('ai-response').style.display = 'none';
             document.getElementById('copy-btn').style.display = 'none';
             
-            updateStatus('Preparing request...');
+            updateStatus('🚀 Sending request to AI...');
             
-            const formData = {
+            const requestData = {
                 creator: creator,
                 fan_type: fanTypeEl.value,
-                fan_message: fanMessage,
-                streaming: enableStreaming
+                fan_message: fanMessage.trim()
             };
             
-            debugLog('Sending request: ' + JSON.stringify(formData));
+            console.log('Sending request:', requestData);
             
             try {
-                if (enableStreaming) {
-                    await handleStreamingRequest(formData);
-                } else {
-                    await handleRegularRequest(formData);
+                const response = await fetch('/api/generate_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    showResponse(data.response);
+                    updateStatus(`✅ Response generated by ${data.creator}!`);
+                } else {
+                    showResponse(`Error: ${data.error}`, true);
+                    updateStatus('❌ Failed to generate response');
+                }
+                
             } catch (error) {
-                debugLog('Error: ' + error.message);
-                showResponse('Error: ' + error.message, true);
-                updateStatus('Error occurred');
+                console.error('Request failed:', error);
+                showResponse(`Network Error: ${error.message}`, true);
+                updateStatus('❌ Connection failed');
             } finally {
                 // Re-enable button
-                document.getElementById('generate-btn').disabled = false;
-                document.getElementById('generate-btn').innerHTML = '<i class="fas fa-magic me-2"></i>Generate Response';
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Response';
             }
         });
         
-        // Regular request handler
-        async function handleRegularRequest(formData) {
-            updateStatus('Sending request to AI...');
-            
-            const response = await fetch('/api/generate_response', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-            
-            debugLog('Response status: ' + response.status);
-            
-            const data = await response.json();
-            debugLog('Response data: ' + JSON.stringify(data));
-            
-            if (data.success) {
-                finalResponse = data.response;
-                showResponse(data.response);
-                updateStatus('✅ Response generated successfully!');
-            } else {
-                showResponse('Error: ' + data.error, true);
-                updateStatus('❌ Failed to generate response');
-            }
-        }
-        
-        // Streaming request handler - Railway optimized
-        async function handleStreamingRequest(formData) {
-            updateStatus('Initializing streaming...');
-            
-            // First get streaming URL
-            const response = await fetch('/api/generate_response', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-            
-            const data = await response.json();
-            debugLog('Streaming init response: ' + JSON.stringify(data));
-            
-            if (data.success && data.streaming && data.stream_url) {
-                updateStatus('Connecting to stream...');
-                
-                // Railway-specific EventSource configuration
-                const eventSource = new EventSource(data.stream_url);
-                
-                // Set timeout for Railway
-                const timeout = setTimeout(() => {
-                    debugLog('Stream timeout - closing connection');
-                    eventSource.close();
-                    showResponse('Stream timeout. Railway connection limit reached. Try regular mode.', true);
-                    updateStatus('❌ Stream timeout');
-                }, 30000); // 30 second timeout
-                
-                eventSource.onopen = function(event) {
-                    debugLog('Stream connection opened successfully');
-                    updateStatus('🔗 Stream connected');
-                    clearTimeout(timeout);
-                };
-                
-                eventSource.onmessage = function(event) {
-                    try {
-                        const streamData = JSON.parse(event.data);
-                        debugLog('Stream data: ' + JSON.stringify(streamData));
-                        
-                        if (streamData.error) {
-                            showResponse('Stream Error: ' + streamData.error, true);
-                            updateStatus('❌ Streaming failed');
-                            eventSource.close();
-                            clearTimeout(timeout);
-                            return;
-                        }
-                        
-                        if
+        // Prevent form submission if wrapped in form
+        document.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
