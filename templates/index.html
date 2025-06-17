@@ -727,41 +727,32 @@
             }
         }
 
-        function updateKnownInfo(memoryData) {
-            const knownName = document.getElementById('known-name');
-            const knownLocation = document.getElementById('known-location');
-            const knownInterests = document.getElementById('known-interests');
-            
-            if (memoryData.known_name) {
-                knownName.innerHTML = `<strong>Name:</strong> <span style="color: var(--memory-glow);">${memoryData.known_name}</span>`;
-            } else {
-                        function updateKnownInfo(memoryData) {
-            const knownName = document.getElementById('known-name');
-            const knownLocation = document.getElementById('known-location');
-            const knownInterests = document.getElementById('known-interests');
-            
-            if (memoryData.known_name) {
-                knownName.innerHTML = `<strong>Name:</strong> <span style="color: var(--memory-glow);">${memoryData.known_name}</span>`;
-            } else {
-                knownName.innerHTML = '<strong>Name:</strong> <span class="text-muted">Unknown</span>';
-            }
-            
-            if (memoryData.known_location) {
-                knownLocation.innerHTML = `<strong>Location:</strong> <span style="color: var(--memory-glow);">${memoryData.known_location}</span>`;
-            } else {
-                knownLocation.innerHTML = '<strong>Location:</strong> <span class="text-muted">Unknown</span>';
-            }
-            
-            if (memoryData.known_interests && memoryData.known_interests.length > 0) {
-                const interestsBadges = memoryData.known_interests.map(interest => 
-                    `<span class="badge" style="background: var(--memory-glow); color: #000; margin: 2px;">${interest}</span>`
-                ).join('');
-                knownInterests.innerHTML = `<strong>Interests:</strong> ${interestsBadges}`;
-            } else {
-                knownInterests.innerHTML = '<strong>Interests:</strong> <span class="text-muted">None detected</span>';
-            }
-        }
-
+function updateKnownInfo(memoryData) {
+    const knownName = document.getElementById('known-name');
+    const knownLocation = document.getElementById('known-location');
+    const knownInterests = document.getElementById('known-interests');
+    
+    if (memoryData.known_name) {
+        knownName.innerHTML = `<strong>Name:</strong> <span style="color: var(--memory-glow);">${memoryData.known_name}</span>`;
+    } else {
+        knownName.innerHTML = '<strong>Name:</strong> <span class="text-muted">Unknown</span>';
+    }
+    
+    if (memoryData.known_location) {
+        knownLocation.innerHTML = `<strong>Location:</strong> <span style="color: var(--memory-glow);">${memoryData.known_location}</span>`;
+    } else {
+        knownLocation.innerHTML = '<strong>Location:</strong> <span class="text-muted">Unknown</span>';
+    }
+    
+    if (memoryData.known_interests && memoryData.known_interests.length > 0) {
+        const interestsBadges = memoryData.known_interests.map(interest => 
+            `<span class="badge" style="background: var(--memory-glow); color: #000; margin: 2px;">${interest}</span>`
+        ).join('');
+        knownInterests.innerHTML = `<strong>Interests:</strong> ${interestsBadges}`;
+    } else {
+        knownInterests.innerHTML = '<strong>Interests:</strong> <span class="text-muted">None detected</span>';
+    }
+}
         // Update phase completions display
         function updatePhaseCompletions(memoryData) {
             const completions = document.querySelectorAll('.completion-indicator');
