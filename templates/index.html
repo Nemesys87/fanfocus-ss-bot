@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FanFocusGPT - Saints & Sinners Multi-Phase Framework</title>
+    <title>FanFocusGPT - Saints & Sinners Multi-Phase + Memory</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -14,6 +14,7 @@
             --ss-warning: #ffc107;
             --ss-danger: #dc3545;
             --ss-info: #17a2b8;
+            --memory-glow: #00ffaa;
         }
 
         body {
@@ -27,7 +28,7 @@
             border-radius: 20px;
             padding: 40px;
             margin: 20px auto;
-            max-width: 1400px;
+            max-width: 1600px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         
@@ -64,6 +65,57 @@
             border-radius: 15px;
             padding: 25px;
             margin-top: 20px;
+        }
+
+        /* Memory Section Styles */
+        .memory-section {
+            background: linear-gradient(135deg, #00ffaa 0%, #00cc88 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            color: white;
+        }
+
+        .memory-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .memory-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            background: var(--memory-glow);
+            color: #000;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: memoryPulse 2s infinite;
+        }
+
+        @keyframes memoryPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .returning-fan-alert {
+            background: linear-gradient(45deg, var(--memory-glow), #00ff88);
+            color: #000;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #00aa66;
+            animation: memoryGlow 3s infinite;
+        }
+
+        @keyframes memoryGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 170, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 170, 0.6); }
         }
         
         .btn-generate {
@@ -104,6 +156,11 @@
             word-wrap: break-word;
             font-size: 1.1rem;
             line-height: 1.6;
+        }
+
+        .memory-enhanced-response {
+            border-left-color: var(--memory-glow);
+            background: rgba(0, 255, 170, 0.1);
         }
         
         .error {
@@ -194,6 +251,10 @@
             font-weight: bold;
         }
 
+        .memory-boosted {
+            background: linear-gradient(45deg, var(--memory-glow), #00cc88) !important;
+        }
+
         /* Analytics Cards */
         .analytics-card {
             background: white;
@@ -245,17 +306,26 @@
             letter-spacing: 0.5px;
         }
 
-        .phase-selector {
-            background: white;
+        .fan-id-input {
+            background: rgba(0, 255, 170, 0.1);
+            border: 2px solid var(--memory-glow);
             border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            border: 2px solid #e9ecef;
+            padding: 10px;
         }
 
-        .phase-selector.active {
-            border-color: var(--ss-primary);
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        .fan-id-input:focus {
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
+            border-color: var(--memory-glow);
+        }
+
+        .interaction-counter {
+            background: var(--memory-glow);
+            color: #000;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -264,19 +334,28 @@
         <div class="main-container">
             <div class="header-section">
                 <h1 class="display-4">🎯 FanFocusGPT</h1>
-                <p class="lead text-muted">Saints & Sinners Multi-Phase Framework</p>
-                <small class="text-muted">Advanced AI Assistant with Fan Profiling & Analytics</small>
+                <p class="lead text-muted">Saints & Sinners Multi-Phase Framework + Session Memory</p>
+                <small class="text-muted">Advanced AI Assistant with Memory & Fan Profiling</small>
                 <div class="mt-2">
                     <span class="framework-badge">🚀 Multi-Phase Active</span>
+                    <span class="memory-indicator ms-2">🧠 Memory Enabled</span>
                 </div>
             </div>
             
             <div class="row">
                 <!-- Left Column: Input & Phase Control -->
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <div class="form-section">
                         <h4 class="mb-4"><i class="fas fa-user-circle me-2"></i>Creator & Fan Setup</h4>
                         
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fan ID <span class="memory-indicator">Memory</span></label>
+                            <input type="text" class="form-control fan-id-input" id="fan_id" 
+                                placeholder="e.g., marco_italy, sarah_gamer..." 
+                                value="marco_italy">
+                            <small class="text-muted">Unique identifier for memory tracking</small>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label fw-bold">Creator Model</label>
                             <select class="form-select form-select-lg" id="creator" required>
@@ -326,7 +405,7 @@
                         </div>
                         
                         <button type="button" class="btn btn-generate" id="generate-btn">
-                            <i class="fas fa-magic me-2"></i>Generate Multi-Phase Response
+                            <i class="fas fa-magic me-2"></i>Generate Memory Response
                         </button>
                     </div>
 
@@ -358,8 +437,14 @@
                     <div class="response-section">
                         <h4><i class="fas fa-robot me-2"></i>AI Response</h4>
                         
-                        <div class="status-display" id="status-display">Ready to generate multi-phase response...</div>
+                        <div class="status-display" id="status-display">Ready to generate memory-enhanced response...</div>
                         
+                        <!-- Returning Fan Alert -->
+                        <div class="returning-fan-alert" id="returning-fan-alert" style="display: none;">
+                            <i class="fas fa-brain me-2"></i><strong>Returning Fan Detected!</strong>
+                            <div id="returning-fan-details"></div>
+                        </div>
+
                         <!-- Upselling Alert -->
                         <div class="upselling-alert" id="upselling-alert" style="display: none;">
                             <i class="fas fa-star me-2"></i><strong>Upselling Opportunity Detected!</strong>
@@ -386,8 +471,27 @@
                     </div>
                 </div>
 
-                <!-- Right Column: Analytics & Insights -->
-                <div class="col-lg-3">
+                <!-- Right Column: Analytics & Memory -->
+                <div class="col-lg-4">
+                    <!-- Memory Section -->
+                    <div class="memory-section">
+                        <h5><i class="fas fa-brain me-2"></i>Session Memory</h5>
+                        
+                        <div id="memory-status" class="memory-card">
+                            <div class="interaction-counter" id="interaction-counter">
+                                New Fan - No Previous Data
+                            </div>
+                        </div>
+
+                        <div id="known-info" class="memory-card" style="display: none;">
+                            <h6><i class="fas fa-user-tag me-1"></i>Known Information</h6>
+                            <div id="known-name"><strong>Name:</strong> <span class="text-muted">Unknown</span></div>
+                            <div id="known-location"><strong>Location:</strong> <span class="text-muted">Unknown</span></div>
+                            <div id="known-interests"><strong>Interests:</strong> <span class="text-muted">None detected</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Section -->
                     <div class="analytics-section">
                         <h5><i class="fas fa-chart-bar me-2"></i>Fan Analytics</h5>
                         
@@ -445,6 +549,7 @@
     <script>
         let finalResponse = '';
         let currentFrameworkData = {};
+        let currentMemoryData = {};
         
         // Status update function
         function updateStatus(message) {
@@ -453,24 +558,92 @@
         }
         
         // Show response function
-        function showResponse(text, isError = false) {
+        function showResponse(text, isError = false, memoryEnhanced = false) {
             const responseDiv = document.getElementById('ai-response');
             responseDiv.textContent = text;
             responseDiv.style.display = 'block';
             
             if (isError) {
                 responseDiv.classList.add('error');
+                responseDiv.classList.remove('memory-enhanced-response');
                 document.getElementById('copy-btn').style.display = 'none';
             } else {
                 responseDiv.classList.remove('error');
+                if (memoryEnhanced) {
+                    responseDiv.classList.add('memory-enhanced-response');
+                }
                 document.getElementById('copy-btn').style.display = 'block';
                 finalResponse = text;
             }
         }
 
-        // Update analytics display
-        function updateAnalytics(framework, analytics) {
+        // Update memory display
+        function updateMemoryDisplay(memoryData) {
+            currentMemoryData = memoryData;
+            
+            const interactionCounter = document.getElementById('interaction-counter');
+            const knownInfo = document.getElementById('known-info');
+            const returningFanAlert = document.getElementById('returning-fan-alert');
+            
+            if (memoryData.returning_fan) {
+                interactionCounter.textContent = `${memoryData.total_interactions} Previous Interactions`;
+                interactionCounter.style.background = 'var(--memory-glow)';
+                
+                // Show returning fan alert
+                const returningDetails = document.getElementById('returning-fan-details');
+                returningDetails.innerHTML = `
+                    Welcome back! We have ${memoryData.total_interactions} previous interactions on record.
+                    Memory enhancement active for personalized responses.
+                `;
+                returningFanAlert.style.display = 'block';
+                
+                // Update known information
+                updateKnownInfo(memoryData);
+                knownInfo.style.display = 'block';
+            } else {
+                interactionCounter.textContent = 'New Fan - Building Memory';
+                interactionCounter.style.background = '#6c757d';
+                returningFanAlert.style.display = 'none';
+                knownInfo.style.display = 'none';
+            }
+        }
+
+        function updateKnownInfo(memoryData) {
+            const knownName = document.getElementById('known-name');
+            const knownLocation = document.getElementById('known-location');
+            const knownInterests = document.getElementById('known-interests');
+            
+            // Update name
+            if (memoryData.known_name) {
+                knownName.innerHTML = `<strong>Name:</strong> <span style="color: var(--memory-glow);">${memoryData.known_name}</span>`;
+            } else {
+                knownName.innerHTML = '<strong>Name:</strong> <span class="text-muted">Unknown</span>';
+            }
+            
+            // Update location
+            if (memoryData.known_location) {
+                knownLocation.innerHTML = `<strong>Location:</strong> <span style="color: var(--memory-glow);">${memoryData.known_location}</span>`;
+            } else {
+                knownLocation.innerHTML = '<strong>Location:</strong> <span class="text-muted">Unknown</span>';
+            }
+            
+            // Update interests
+            if (memoryData.known_interests && memoryData.known_interests.length > 0) {
+                const interestsBadges = memoryData.known_interests.map(interest => 
+                    `<span class="badge" style="background: var(--memory-glow); color: #000; margin: 2px;">${interest}</span>`
+                ).join('');
+                knownInterests.innerHTML = `<strong>Interests:</strong> ${interestsBadges}`;
+            } else {
+                knownInterests.innerHTML = '<strong>Interests:</strong> <span class="text-muted">None detected</span>';
+            }
+        }
+
+        // Update analytics display (enhanced with memory)
+        function updateAnalytics(framework, analytics, memory) {
             currentFrameworkData = { framework, analytics };
+            
+            // Update memory display
+            updateMemoryDisplay(memory);
             
             // Update phase indicators
             updatePhaseIndicators(framework.current_phase, framework.suggested_next_phase);
@@ -478,8 +651,8 @@
             // Update fan category
             updateFanCategory(framework.fan_category);
             
-            // Update confidence score
-            updateConfidenceScore(framework.confidence_score);
+            // Update confidence score (with memory boost visualization)
+            updateConfidenceScore(framework.confidence_score, analytics.memory_boost);
             
             // Update engagement score
             document.getElementById('engagement-score').textContent = analytics.engagement_score || 0;
@@ -495,7 +668,7 @@
             
             // Show upselling alert if detected
             if (framework.upselling_opportunity) {
-                showUpsellingAlert(framework.fan_category);
+                showUpsellingAlert(framework.fan_category, memory.returning_fan);
             } else {
                 document.getElementById('upselling-alert').style.display = 'none';
             }
@@ -533,19 +706,27 @@
             categoryDisplay.innerHTML = `<span class="fan-category category-${category}">${categoryNames[category] || category}</span>`;
         }
 
-        function updateConfidenceScore(score) {
+        function updateConfidenceScore(score, memoryBoost) {
             const fill = document.getElementById('confidence-fill');
             const percentage = Math.min(100, Math.max(0, score));
             fill.style.width = percentage + '%';
             fill.textContent = percentage + '%';
             
+            // Add memory boost visual indicator
+            if (memoryBoost) {
+                fill.classList.add('memory-boosted');
+                fill.textContent += ' 🧠';
+            } else {
+                fill.classList.remove('memory-boosted');
+            }
+            
             // Color coding based on score
             if (percentage >= 80) {
-                fill.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+                if (!memoryBoost) fill.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
             } else if (percentage >= 60) {
-                fill.style.background = 'linear-gradient(45deg, #ffc107, #e0a800)';
+                if (!memoryBoost) fill.style.background = 'linear-gradient(45deg, #ffc107, #e0a800)';
             } else {
-                fill.style.background = 'linear-gradient(45deg, #dc3545, #c82333)';
+                if (!memoryBoost) fill.style.background = 'linear-gradient(45deg, #dc3545, #c82333)';
             }
         }
 
@@ -561,168 +742,4 @@
         }
 
         function updateEmotionalTone(tone) {
-            const toneDisplay = document.getElementById('emotional-tone');
-            const toneConfig = {
-                'positive': { class: 'bg-success', text: '😊 Positive' },
-                'negative': { class: 'bg-danger', text: '😔 Negative' },
-                'neutral': { class: 'bg-secondary', text: '😐 Neutral' }
-            };
-            
-            const config = toneConfig[tone] || toneConfig.neutral;
-            toneDisplay.innerHTML = `<span class="badge ${config.class}">${config.text}</span>`;
-        }
-
-        function showUpsellingAlert(category) {
-            const alert = document.getElementById('upselling-alert');
-            const details = document.getElementById('upselling-details');
-            
-            const messages = {
-                'big_spender': 'Fan shows premium interest patterns - perfect for exclusive content offers!',
-                'emotional': 'Fan seeking connection - ideal for GFE packages and personal content!',
-                'visual': 'Fan focused on visuals - great opportunity for photo sets and custom content!',
-                'interactive': 'Fan wants interaction - perfect for video calls and live sessions!',
-                'default': 'Fan showing interest in premium content - capitalize on this opportunity!'
-            };
-            
-            details.textContent = messages[category] || messages.default;
-            alert.style.display = 'block';
-        }
-
-        function showFrameworkInfo(framework) {
-            const info = document.getElementById('framework-info');
-            const phaseInfo = document.getElementById('phase-info');
-            const categoryInfo = document.getElementById('category-info');
-            const nextAction = document.getElementById('next-action');
-            
-            phaseInfo.innerHTML = `<strong>Phase ${framework.current_phase}:</strong> ${framework.phase_name}`;
-            categoryInfo.innerHTML = `<strong>Category:</strong> ${framework.fan_category}`;
-            
-            if (framework.current_phase != framework.suggested_next_phase) {
-                nextAction.innerHTML = `<strong>⬆️ Progress to Phase ${framework.suggested_next_phase}</strong>`;
-                nextAction.style.color = '#28a745';
-            } else {
-                nextAction.innerHTML = `<strong>Continue current phase strategy</strong>`;
-                nextAction.style.color = '#ffc107';
-            }
-            
-            info.style.display = 'block';
-        }
-        
-        // Copy function
-        document.getElementById('copy-btn').addEventListener('click', function() {
-            if (finalResponse) {
-                navigator.clipboard.writeText(finalResponse).then(() => {
-                    this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
-                    this.style.background = 'rgba(40, 167, 69, 0.8)';
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-copy me-1"></i>Copy Response';
-                        this.style.background = 'rgba(255, 255, 255, 0.25)';
-                    }, 2000);
-                }).catch(err => {
-                    alert('Copy failed. Select and copy manually.');
-                });
-            }
-        });
-
-        // Phase selector change handler
-        document.getElementById('current_phase').addEventListener('change', function() {
-            updatePhaseIndicators(this.value, this.value);
-        });
-        
-        // Generate button click handler
-        document.getElementById('generate-btn').addEventListener('click', async function() {
-            console.log('Generate Multi-Phase Response clicked');
-            
-            // Get form values
-            const creator = document.getElementById('creator').value;
-            const fanTypeEl = document.querySelector('input[name="fan_type"]:checked');
-            const fanMessage = document.getElementById('fan_message').value;
-            const currentPhase = parseInt(document.getElementById('current_phase').value);
-            
-            console.log('Values:', { creator, fanType: fanTypeEl?.value, fanMessage: fanMessage?.substring(0, 50), currentPhase });
-            
-            // Validation
-            if (!creator) {
-                alert('Please select a creator');
-                return;
-            }
-            
-            if (!fanTypeEl) {
-                alert('Please select fan type');
-                return;
-            }
-            
-            if (!fanMessage.trim()) {
-                alert('Please enter fan message');
-                return;
-            }
-            
-            // Disable button and show loading
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
-            
-            // Hide previous response
-            document.getElementById('ai-response').style.display = 'none';
-            document.getElementById('copy-btn').style.display = 'none';
-            document.getElementById('framework-info').style.display = 'none';
-            document.getElementById('upselling-alert').style.display = 'none';
-            
-            updateStatus('🚀 Analyzing with S&S Framework...');
-            
-            const requestData = {
-                creator: creator,
-                fan_type: fanTypeEl.value,
-                fan_message: fanMessage.trim(),
-                current_phase: currentPhase
-            };
-            
-            console.log('Sending Multi-Phase request:', requestData);
-            
-            try {
-                const response = await fetch('/api/generate_response', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestData)
-                });
-                
-                console.log('Response status:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                console.log('Multi-Phase Response data:', data);
-                
-                if (data.success) {
-                    showResponse(data.response);
-                    updateAnalytics(data.framework, data.analytics);
-                    updateStatus(`✅ Multi-Phase response by ${data.creator} - Phase ${data.framework.current_phase}`);
-                } else {
-                    showResponse(`Error: ${data.error}`, true);
-                    updateStatus('❌ Failed to generate response');
-                }
-                
-            } catch (error) {
-                console.error('Request failed:', error);
-                showResponse(`Network Error: ${error.message}`, true);
-                updateStatus('❌ Connection failed');
-            } finally {
-                // Re-enable button
-                this.disabled = false;
-                this.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Multi-Phase Response';
-            }
-        });
-        
-        // Initialize phase indicators
-        updatePhaseIndicators(0, 0);
-        
-        // Prevent form submission if wrapped in form
-        document.addEventListener('submit', function(e) {
-            e.preventDefault();
-        });
-    </script>
-</body>
-</html>
+            const toneDisplay = document.getElementById('
