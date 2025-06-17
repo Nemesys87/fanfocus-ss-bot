@@ -5,87 +5,477 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FanFocusGPT - Saints & Sinners Assistant</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .response-container {
+            min-height: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .typing-indicator.active {
+            display: flex;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+        
+        .streaming-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 60px;
+            border-left: 4px solid #ffd700;
+        }
+        
+        .creator-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-generate {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-generate:disabled {
+            background: #6c757d;
+            transform: none;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .copy-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .framework-info {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 4px solid #ffd700;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-light">
     <div class="container mt-5">
-        <h1 class="text-center mb-4">🎯 FanFocusGPT Assistant</h1>
+        <div class="text-center mb-4">
+            <h1 class="display-4 fw-bold">🎯 FanFocusGPT</h1>
+            <p class="lead text-muted">Saints & Sinners AI Assistant with Real-Time Streaming</p>
+        </div>
         
         <div class="row">
             <div class="col-md-6">
-                <form id="fanfocus-form">
-                    <div class="mb-3">
-                        <label class="form-label">Creator Model</label>
-                        <select class="form-select" id="creator" required>
-                            <option value="">Select Creator</option>
-                            <option value="ella">Ella Blair</option>
-                            <option value="vanp">Vanp</option>
-                            <option value="yana">Yana Sinner</option>
-                            <option value="venessa">Venessa</option>
-                        </select>
-                    </div>
+                <div class="form-section">
+                    <h3 class="mb-4"><i class="fas fa-user-circle"></i> Creator & Fan Setup</h3>
                     
-                    <div class="mb-3">
-                        <label class="form-label">Fan Type</label>
-                        <div>
-                            <input type="radio" name="fan_type" value="new" id="new" required>
-                            <label for="new">New Fan</label>
-                            <input type="radio" name="fan_type" value="existing" id="existing" class="ms-3">
-                            <label for="existing">Existing Fan</label>
+                    <form id="fanfocus-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Creator Model</label>
+                            <select class="form-select" id="creator" required>
+                                <option value="">Select Creator</option>
+                                <option value="ella">🇧🇷 Ella Blair - Brazilian GFE</option>
+                                <option value="vanp">🔥 Vanp - Dominant Bratty</option>
+                                <option value="yana">🎨 Yana Sinner - Artistic Nerdy</option>
+                                <option value="venessa">💃 Venessa - Latina Gamer</option>
+                            </select>
                         </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Fan Message</label>
-                        <textarea class="form-control" id="fan_message" rows="3" placeholder="Paste fan's message here..." required></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">Generate Response</button>
-                </form>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fan Type</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input type="radio" name="fan_type" value="new" id="new" class="form-check-input" required>
+                                        <label for="new" class="form-check-label">🆕 New Fan</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input type="radio" name="fan_type" value="existing" id="existing" class="form-check-input">
+                                        <label for="existing" class="form-check-label">👥 Existing Fan</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fan Message</label>
+                            <textarea class="form-control" id="fan_message" rows="4" 
+                                placeholder="Paste fan's message here..." required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" id="enable_streaming" class="form-check-input" checked>
+                                <label for="enable_streaming" class="form-check-label">
+                                    ⚡ Enable Real-Time Streaming
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-generate text-white w-100" id="generate-btn">
+                            <i class="fas fa-magic"></i> Generate Response
+                        </button>
+                    </form>
+                </div>
             </div>
             
             <div class="col-md-6">
-                <div id="response-area" class="border p-3 rounded">
-                    <h5>AI Response:</h5>
-                    <div id="ai-response" class="alert alert-success d-none"></div>
-                    <div id="loading" class="d-none">Generating response...</div>
+                <div class="response-container">
+                    <div class="status-indicator" id="status-indicator">Ready</div>
+                    
+                    <h5><i class="fas fa-robot"></i> AI Response</h5>
+                    
+                    <div class="creator-badge" id="creator-badge" style="display: none;">
+                        <i class="fas fa-user"></i> <span id="creator-name"></span>
+                    </div>
+                    
+                    <div class="typing-indicator" id="typing-indicator">
+                        <i class="fas fa-brain"></i>
+                        <span id="typing-text">AI is thinking...</span>
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="streaming-text" id="ai-response" style="display: none;">
+                        <!-- Streaming response will appear here -->
+                    </div>
+                    
+                    <div class="framework-info" id="framework-info" style="display: none;">
+                        <strong>S&S Framework:</strong> <span id="kyc-step"></span>
+                    </div>
+                    
+                    <button class="copy-btn" id="copy-btn" style="display: none;" onclick="copyResponse()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        let currentEventSource = null;
+        let finalResponse = '';
+        
         document.getElementById('fanfocus-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const loading = document.getElementById('loading');
-            const responseDiv = document.getElementById('ai-response');
+            const creator = document.getElementById('creator').value;
+            const fanTypeEl = document.querySelector('input[name="fan_type"]:checked');
+            const fanMessage = document.getElementById('fan_message').value;
+            const enableStreaming = document.getElementById('enable_streaming').checked;
             
-            loading.classList.remove('d-none');
-            responseDiv.classList.add('d-none');
+            if (!creator || !fanTypeEl || !fanMessage) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            // Reset UI
+            resetUI();
             
             const formData = {
-                creator: document.getElementById('creator').value,
-                fan_type: document.querySelector('input[name="fan_type"]:checked').value,
-                fan_message: document.getElementById('fan_message').value
+                creator: creator,
+                fan_type: fanTypeEl.value,
+                fan_message: fanMessage,
+                streaming: enableStreaming
             };
+            
+            if (enableStreaming) {
+                handleStreamingRequest(formData);
+            } else {
+                handleRegularRequest(formData);
+            }
+        });
+        
+        function resetUI() {
+            document.getElementById('generate-btn').disabled = true;
+            document.getElementById('ai-response').style.display = 'none';
+            document.getElementById('copy-btn').style.display = 'none';
+            document.getElementById('framework-info').style.display = 'none';
+            document.getElementById('creator-badge').style.display = 'none';
+            finalResponse = '';
+        }
+        
+        function handleStreamingRequest(formData) {
+            // Close any existing connection
+            if (currentEventSource) {
+                currentEventSource.close();
+            }
+            
+            // Show typing indicator
+            showTypingIndicator('Connecting to AI...');
+            
+            // Create streaming request
+            const eventSource = new EventSource('/api/generate_response_stream');
+            currentEventSource = eventSource;
+            
+            // Send the data via POST first
+            fetch('/api/generate_response_stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.error) {
+                        showError(data.error);
+                        eventSource.close();
+                        return;
+                    }
+                    
+                    if (data.status === 'starting') {
+                        showCreatorBadge(data.creator);
+                        showTypingIndicator(`${getCreatorName(data.creator)} is thinking...`);
+                        updateStatus('Thinking');
+                    }
+                    
+                    if (data.status === 'thinking') {
+                        showTypingIndicator(data.message);
+                    }
+                    
+                    if (data.status === 'generating') {
+                        hideTypingIndicator();
+                        showResponse('');
+                        updateStatus('Generating');
+                    }
+                    
+                    if (data.chunk) {
+                        appendToResponse(data.accumulated);
+                    }
+                    
+                    if (data.status === 'complete') {
+                        finalResponse = data.final_response;
+                        showFrameworkInfo(data.kyc_step);
+                        showCopyButton();
+                        updateStatus('Complete');
+                        document.getElementById('generate-btn').disabled = false;
+                        eventSource.close();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error parsing streaming data:', error);
+                }
+            };
+            
+            eventSource.onerror = function(error) {
+                console.error('Streaming error:', error);
+                showError('Streaming connection failed. Falling back to regular mode...');
+                eventSource.close();
+                
+                // Fallback to regular request
+                formData.streaming = false;
+                handleRegularRequest(formData);
+            };
+        }
+        
+        async function handleRegularRequest(formData) {
+            showTypingIndicator('Generating response...');
+            updateStatus('Processing');
             
             try {
                 const response = await fetch('/api/generate_response', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
                 
                 const data = await response.json();
                 
-                responseDiv.innerHTML = data.response || 'Error generating response';
-                responseDiv.classList.remove('d-none');
+                hideTypingIndicator();
+                
+                if (data.success) {
+                    finalResponse = data.response;
+                    showResponse(data.response);
+                    showCreatorBadge(data.creator);
+                    showFrameworkInfo('Phase 0 - Step 1: Name Collection');
+                    showCopyButton();
+                    updateStatus('Complete');
+                } else {
+                    showError(data.error);
+                }
+                
             } catch (error) {
-                responseDiv.innerHTML = 'Error: ' + error.message;
-                responseDiv.classList.remove('d-none');
+                hideTypingIndicator();
+                showError('Network error: ' + error.message);
             }
             
-            loading.classList.add('d-none');
+            document.getElementById('generate-btn').disabled = false;
+        }
+        
+        function showTypingIndicator(text) {
+            document.getElementById('typing-text').textContent = text;
+            document.getElementById('typing-indicator').classList.add('active');
+        }
+        
+        function hideTypingIndicator() {
+            document.getElementById('typing-indicator').classList.remove('active');
+        }
+        
+        function showResponse(text) {
+            const responseEl = document.getElementById('ai-response');
+            responseEl.textContent = text;
+            responseEl.style.display = 'block';
+        }
+        
+        function appendToResponse(text) {
+            const responseEl = document.getElementById('ai-response');
+            responseEl.textContent = text;
+            responseEl.style.display = 'block';
+        }
+        
+        function showCreatorBadge(creator) {
+            const badge = document.getElementById('creator-badge');
+            const name = document.getElementById('creator-name');
+            name.textContent = getCreatorName(creator);
+            badge.style.display = 'block';
+        }
+        
+        function showFrameworkInfo(step) {
+            const info = document.getElementById('framework-info');
+            const stepEl = document.getElementById('kyc-step');
+            stepEl.textContent = step;
+            info.style.display = 'block';
+        }
+        
+        function showCopyButton() {
+            document.getElementById('copy-btn').style.display = 'block';
+        }
+        
+        function updateStatus(status) {
+            document.getElementById('status-indicator').textContent = status;
+        }
+        
+        function showError(error) {
+            const responseEl = document.getElementById('ai-response');
+            responseEl.innerHTML = `<div class="text-danger"><i class="fas fa-exclamation-triangle"></i> ${error}</div>`;
+            responseEl.style.display = 'block';
+            updateStatus('Error');
+        }
+        
+        function getCreatorName(creator) {
+            const names = {
+                'ella': 'Ella Blair',
+                'vanp': 'Vanp',
+                'yana': 'Yana Sinner',
+                'venessa': 'Venessa'
+            };
+            return names[creator] || creator;
+        }
+        
+        function copyResponse() {
+            if (finalResponse) {
+                navigator.clipboard.writeText(finalResponse).then(() => {
+                    const btn = document.getElementById('copy-btn');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    btn.style.background = 'rgba(40, 167, 69, 0.8)';
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.style.background = 'rgba(255, 255, 255, 0.2)';
+                    }, 2000);
+                });
+            }
+        }
+        
+        // Auto-resize textarea
+        document.getElementById('fan_message').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
         });
     </script>
 </body>
