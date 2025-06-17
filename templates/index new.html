@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanFocusGPT - Saints & Sinners Chat Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --ss-primary: #667eea;
+            --ss-secondary: #764ba2;
+            --memory-glow: #00ffaa;
+            --warning-color: #ff8c00;
+            --error-color: #dc3545;
+            --success-color: #28a745;
+            --fan-message-bg: #007bff;
+            --ai-message-bg: rgba(255, 255, 255, 0.15);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--ss-primary) 0%, var(--ss-secondary) 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 1900px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header-section h1 {
+            background: linear-gradient(45deg, var(--ss-primary), var(--ss-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+        }
+        
+        .form-section, .analytics-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chat-section {
+            background: linear-gradient(135deg, var(--ss-primary) 0%, var(--ss-secondary) 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            height: 800px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .chat-header {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            max-height: 500px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.fan-message {
+            justify-content: flex-end;
+        }
+
+        .message.ai-message {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .fan-message .message-bubble {
+            background: var(--fan-message-bg);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message .message-bubble {
+            background: var(--ai-message-bg);
+            color: white;
+            border-bottom-left-radius: 5px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .message-meta {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .fan-message .message-meta {
+            text-align: right;
+        }
+
+        .ai-message .message-meta {
+            text-align: left;
+        }
+
+        .creator-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .creator-ella { background: #ff69b4; color: white; }
+        .creator-vanp { background: #dc143c; color: white; }
+        .creator-yana { background: #9370db; color: white; }
+        .creator-venessa { background: #ffd700; color: black; }
+
+        .chat-controls {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .chat-input-area {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .memory-section {
+            background: linear-gradient(135deg, #00ffaa 0%, #00cc88 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            color: white;
+        }
+
+        .fan-type-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            color: white;
+        }
+
+        .memory-card, .fan-type-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .fan-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid var(--memory-glow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fan-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .fan-card.selected {
+            background: rgba(255, 255, 255, 0.25);
+            border-left-color: #ffd700;
+        }
+
+        .fan-type-new {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .fan-type-existing {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .fan-type-warning {
+            background: linear-gradient(45deg, var(--warning-color), #e55a00);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        .relationship-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        .stage-new { background: #6c757d; }
+        .stage-first_contact { background: #17a2b8; }
+        .stage-getting_acquainted { background: #28a745; }
+        .stage-information_gathering { background: #ffc107; color: #000; }
+        .stage-building_rapport { background: #fd7e14; }
+        .stage-deepening_relationship { background: #6f42c1; }
+        .stage-emotional_connection { background: #e83e8c; }
+        .stage-established_relationship { background: #dc3545; }
+
+        .type-warning-alert {
+            background: linear-gradient(45deg, var(--warning-color), #ffb347);
+            color: #000;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ff4500;
+            animation: warningPulse 3s infinite;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(255, 140, 0, 0.6); }
+        }
+
+        .memory-indicator {
+            background: var(--memory-glow);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .btn-generate {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            border-radius: 25px;
+            padding: 15px 35px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            width: 100%;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-memory-action {
+            background: var(--memory-glow);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin: 2px;
+            cursor: pointer;
+        }
+        
+        .btn-generate:disabled {
+            background: #6c757d !important;
+            color: white;
+        }
+
+        .btn-chat-action {
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 0.8rem;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-chat-action:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .fan-id-input {
+            background: rgba(0, 255, 170, 0.1);
+            border: 2px solid var(--memory-glow);
+            border-radius: 10px;
+        }
+
+        .framework-badge {
+            background: linear-gradient(45deg, var(--ss-primary), var(--ss-secondary));
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .confidence-bar {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(45deg, var(--success-color), #20c997);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .memory-boosted {
+            background: linear-gradient(45deg, var(--memory-glow), #00cc88) !important;
+        }
+
+        .phase-completion-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .completion-indicator {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        .completed {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .incomplete {
+            background: #6c757d;
+            color: white;
+        }
+
+        .in-progress {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .chat-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .phase-0 { background: #17a2b8; color: white; }
+        .phase-1 { background: #ffc107; color: black; }
+        .phase-2 { background: #fd7e14; color: white; }
+        .phase-3 { background: #6f42c1; color: white; }
+        .phase-4 { background: #28a745; color: white; }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            margin-left: 5px;
+            background: var(--success-color);
+            color: white;
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <div class="header-section">
+                <h1 class="display-4">🎯 FanFocusGPT</h1>
+                <p class="lead text-muted">Saints & Sinners Advanced Chat Interface</p>
+                <div class="mt-2">
+                    <span class="framework-badge">🚀 Multi-Phase Active</span>
+                    <span class="memory-indicator ms-2">🧠 Chat Memory</span>
+                    <span class="fan-type-new ms-2">💬 Conversation History</span>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Left Column: Input & Controls -->
+                <div class="col-lg-3">
+                    <div class="form-section">
+                        <h4 class="mb-4"><i class="fas fa-user-circle me-2"></i>Creator & Fan Setup</h4>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fan ID <span class="memory-indicator">Memory</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control fan-id-input" id="fan_id" 
+                                    placeholder="e.g., marco_italy, sarah_gamer..." 
+                                    value="marco_italy">
+                                <button class="btn btn-memory-action" id="load-fan-btn" type="button">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Creator Model</label>
+                            <select class="form-select" id="creator" required>
+                                <option value="">Select Creator</option>
+                                <option value="ella">🇧🇷 Ella Blair - Brazilian GFE</option>
+                                <option value="vanp">🔥 Vanp - Dominant Bratty</option>
+                                <option value="yana">🎨 Yana Sinner - Artistic Nerdy</option>
+                                <option value="venessa">💃 Venessa - Latina Gamer</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Fan Type 
+                                <span class="fan-type-new" id="auto-detection-badge">Auto-Detecting</span>
+                            </label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input type="radio" name="fan_type" value="new" id="new" class="form-check-input" required>
+                                        <label for="new" class="form-check-label">🆕 New Fan</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input type="radio" name="fan_type" value="existing" id="existing" class="form-check-input">
+                                        <label for="existing" class="form-check-label">👥 Existing Fan</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">S&S Framework Phase</label>
+                            <select class="form-select" id="current_phase">
+                                <option value="0">Phase 0: Name Collection</option>
+                                <option value="1">Phase 1: Location & Basic Info</option>
+                                <option value="2">Phase 2: Interest Profiling</option>
+                                <option value="3">Phase 3: Engagement Building</option>
+                                <option value="4">Phase 4: Upselling Opportunities</option>
+                            </select>
+                            <small class="text-muted">Auto-adjusts based on fan history</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Fan Message</label>
+                            <textarea class="form-control" id="fan_message" rows="4" 
+                                placeholder="Paste fan's message here..." required></textarea>
+                        </div>
+                        
+                        <button type="button" class="btn btn-generate" id="generate-btn">
+                            <i class="fas fa-magic me-2"></i>Add to Conversation
+                        </button>
+                    </div>
+
+                    <!-- Phase Completion Status -->
+                    <div class="analytics-section">
+                        <h5><i class="fas fa-chart-line me-2"></i>Phase Completions</h5>
+                        <div class="phase-completion-grid" id="phase-completions">
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-user"></i><br>
+                                <small>Name</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-map-marker"></i><br>
+                                <small>Location</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-heart"></i><br>
+                                <small>Interests</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-comments"></i><br>
+                                <small>Emotional</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-dollar-sign"></i><br>
+                                <small>Upselling</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Fan Memory -->
+                    <div class="memory-section">
+                        <h5><i class="fas fa-brain me-2"></i>Current Fan Memory</h5>
+                        
+                        <div id="memory-status" class="memory-card">
+                            <div id="interaction-counter" style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 20px; display: inline-block; font-weight: bold;">
+                                New Fan - No Previous Data
+                            </div>
+                            <div id="relationship-stage" class="mt-2">
+                                <span class="relationship-badge stage-new">New</span>
+                            </div>
+                        </div>
+
+                        <div id="known-info" class="memory-card" style="display: none;">
+                            <h6><i class="fas fa-user-tag me-1"></i>Known Information</h6>
+                            <div id="known-name"><strong>Name:</strong> <span class="text-muted">Unknown</span></div>
+                            <div id="known-location"><strong>Location:</strong> <span class="text-muted">Unknown</span></div>
+                            <div id="known-interests"><strong>Interests:</strong> <span class="text-muted">None detected</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Middle Column: Chat Interface -->
+                <div class="col-lg-5">
+                    <div class="chat-section">
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4><i class="fas fa-comments me-2"></i>Conversation</h4>
+                                        <div id="chat-status">Select a fan to view conversation history</div>
+                                    </div>
+                                    <div>
+                                        <span id="current-fan-badge" class="fan-type-new" style="display: none;">Current Fan</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Type Validation Warning -->
+                            <div class="type-warning-alert" id="type-warning-alert" style="display: none;">
+                                <i class="fas fa-exclamation-triangle me-2"></i><strong>Fan Type Warning!</strong>
+                                <div id="type-warning-details"></div>
+                            </div>
+
+                            <div class="chat-controls">
+                                <button class="btn btn-chat-action" id="clear-chat-btn">
+                                    <i class="fas fa-trash me-1"></i>Clear Chat
+                                </button>
+                                <button class="btn btn-chat-action" id="export-chat-btn">
+                                    <i class="fas fa-download me-1"></i>Export
+                                </button>
+                                <button class="btn btn-chat-action" id="copy-last-btn">
+                                    <i class="fas fa-copy me-1"></i>Copy Last
+                                </button>
+                                <button class="btn btn-chat-action" id="refresh-chat-btn">
+                                    <i class="fas fa-sync me-1"></i>Refresh
+                                </button>
+                            </div>
+                            
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="chat-empty">
+                                    <i class="fas fa-comment-dots fa-3x mb-3"></i>
+                                    <h5>Start a Conversation</h5>
+                                    <p>Select a fan or enter a new fan ID to begin chatting</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Advanced Analytics -->
+                <div class="col-lg-4">
+                    <!-- Fan Type Intelligence -->
+                    <div class="fan-type-section">
+                        <h5><i class="fas fa-user-cog me-2"></i>Fan Type Intelligence</h5>
+                        
+                        <div class="fan-type-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Detection Status:</strong>
+                                <span id="detection-status" class="fan-type-new">Ready</span>
+                            </div>
+                            <div id="type-analysis-display">
+                                <small class="text-muted">Waiting for analysis...</small>
+                            </div>
+                        </div>
+
+                        <div class="fan-type-card">
+                            <strong>Confidence Score:</strong>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="confidence-fill" style="width: 0%;">0%</div>
+                            </div>
+                            <small id="confidence-breakdown">Base confidence</small>
+                        </div>
+
+                        <div class="fan-type-card" id="relationship-analysis" style="display: none;">
+                            <strong>Relationship Analysis:</strong>
+                            <div id="relationship-details"></div>
+                        </div>
+                    </div>
+
+                    <!-- Memory Viewer -->
+                    <div class="analytics-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-database me-2"></i>Session Fans</h5>
+                            <button class="btn btn-memory-action" id="refresh-memory-btn">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+
+                        <div id="fans-list" style="max-height: 300px; overflow-y: auto;">
+                            <div class="text-center text-muted p-3">
+                                <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                No fans in memory yet
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Fan Details -->
+                    <div class="analytics-section" id="fan-details" style="display: none;">
+                        <h5><i class="fas fa-user-cog me-2"></i>Fan Analytics</h5>
+                        <div id="selected-fan-info"></div>
+                        <div class="mt-3">
+                            <button class="btn btn-memory-action w-100" id="resume-conversation-btn">
+                                <i class="fas fa-play"></i> Load Conversation
+                            </button>
+                            <button class="btn btn-memory-action w-100 mt-2" id="reset-fan-btn" style="background: var(--error-color);">
+                                <i class="fas fa-trash"></i> Reset Fan Memory
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionMemoryData = {};
+        let selectedFanId = null;
+        let currentAnalysis = {};
+        let conversationHistory = [];
+        let lastResponse = '';
+        
+        // Update status function
+        function updateChatStatus(message) {
+            document.getElementById('chat-status').textContent = message;
+            console.log('📱 Chat Status:', message);
+        }
+        
+        // Add message to chat
+        function addMessageToChat(content, isUser = false, metadata = {}) {
+            const chatMessages = document.getElementById('chat-messages');
+            
+            // Remove empty state if present
+            const emptyState = chatMessages.querySelector('.chat-empty');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'fan-message' : 'ai-message'}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = content;
+            
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'message-meta';
+            
+            if (isUser) {
+                metaDiv.innerHTML = `<i class="fas fa-user me-1"></i>${formatTimestamp(new Date())}`;
+            } else {
+                let metaHtml = '';
+                if (metadata.creator) {
+                    metaHtml += `<span class="creator-badge creator-${metadata.creator}">${metadata.creator.toUpperCase()}</span>`;
+                }
+                if (metadata.phase !== undefined) {
+                    metaHtml += `<span class="phase-badge phase-${metadata.phase}">Phase ${metadata.phase}</span>`;
+                }
+                if (metadata.confidence) {
+                    metaHtml += `<span class="confidence-badge">${metadata.confidence}%</span>`;
+                }
+                metaHtml += `<br><i class="fas fa-robot me-1"></i>${formatTimestamp(new Date())}`;
+                metaDiv.innerHTML = metaHtml;
+            }
+            
+            messageDiv.appendChild(bubbleDiv);
+            messageDiv.appendChild(metaDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Auto-scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Store in conversation history
+            conversationHistory.push({
+                content: content,
+                isUser: isUser,
+                timestamp: new Date().toISOString(),
+                metadata: metadata
+            });
+        }
+        
+        function formatTimestamp(date) {
+            return date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+        }
+        
+        // Load conversation history for selected fan
+        async function loadConversationHistory(fanId) {
+            try {
+                updateChatStatus(`Loading conversation for ${fanId}...`);
+                
+                const response = await fetch(`/api/get_fan_data/${fanId}`);
+                const data = await response.json();
+                
+                if (data.success && data.fan_data) {
+                    const fanData = data.fan_data;
+                    const interactionHistory = fanData.interaction_history || [];
+                    
+                    // Clear current chat
+                    clearChat();
+                    conversationHistory = [];
+                    
+                    // Load conversation history
+                    interactionHistory.forEach((interaction, index) => {
+                        // Add fan message
+                        addMessageToChat(interaction.message, true, {
+                            timestamp: interaction.timestamp
+                        });
+                        
+                        // Note: AI responses would need to be stored separately in your backend
+                        // For now, we'll simulate them based on the interaction data
+                        if (index > 0) { // Skip first interaction for demo
+                            addMessageToChat(
+                                `[Previous AI Response for ${interaction.creator}]`, 
+                                false, 
+                                {
+                                    creator: interaction.creator,
+                                    phase: interaction.phase,
+                                    timestamp: interaction.timestamp
+                                }
+                            );
+                        }
+                    });
+                    
+                    updateChatStatus(`Loaded ${interactionHistory.length} messages for ${fanId}`);
+                    
+                    // Update current fan badge
+                    const currentFanBadge = document.getElementById('current-fan-badge');
+                    currentFanBadge.textContent = `${fanData.detected_info?.name || fanId}`;
+                    currentFanBadge.style.display = 'inline-block';
+                    
+                } else {
+                    updateChatStatus(`No conversation history found for ${fanId}`);
+                    clearChat();
+                }
+                
+            } catch (error) {
+                console.error('❌ Failed to load conversation history:', error);
+                updateChatStatus('Failed to load conversation history');
+            }
+        }
+        
+        function clearChat() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = `
+                <div class="chat-empty">
+                    <i class="fas fa-comment-dots fa-3x mb-3"></i>
+                    <h5>Conversation Cleared</h5>
+                    <p>Ready for new messages</p>
+                </div>
+            `;
+            conversationHistory = [];
+        }
+        
+        function exportConversation() {
+            if (conversationHistory.length === 0) {
+                alert('No conversation to export');
+                return;
+            }
+            
+            const fanId = selectedFanId || 'unknown_fan';
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `conversation_${fanId}_${timestamp}.txt`;
+            
+            let exportText = `FanFocusGPT Conversation Export\n`;
+            exportText += `Fan: ${fanId}\n`;
+            exportText += `Date: ${new Date().toLocaleString()}\n`;
+            exportText += `Total Messages: ${conversationHistory.length}\n\n`;
+            exportText += '='.repeat(50) + '\n\n';
+            
+            conversationHistory.forEach((msg, index) => {
+                const speaker = msg.isUser ? 'FAN' : 'AI';
+                const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+                exportText += `[${timestamp}] ${speaker}: ${msg.content}\n`;
+                
+                if (!msg.isUser && msg.metadata) {
+                    exportText += `   └─ Creator: ${msg.metadata.creator || 'N/A'}, Phase: ${msg.metadata.phase || 'N/A'}\n`;
+                }
+                exportText += '\n';
+            });
+            
+            // Download file
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            updateChatStatus(`Conversation exported as ${filename}`);
+        }
+        
+        function copyLastResponse() {
+            if (lastResponse) {
+                navigator.clipboard.writeText(lastResponse).then(() => {
+                    updateChatStatus('Last response copied to clipboard');
+                }).catch(err => {
+                    alert('Copy failed. Select and copy manually.');
+                });
+            } else {
+                alert('No response to copy');
+            }
+        }
+
+        // Update fan type analysis display
+        function updateFanTypeAnalysis(fanTypeAnalysis) {
+            const detectionStatus = document.getElementById('detection-status');
+            const typeAnalysisDisplay = document.getElementById('type-analysis-display');
+            const autoDetectionBadge = document.getElementById('auto-detection-badge');
+            
+            const detectedType = fanTypeAnalysis.detected_type;
+            const isConsistent = fanTypeAnalysis.type_validation.is_consistent;
+            
+            // Update detection status
+            if (detectedType === 'new') {
+                detectionStatus.className = 'fan-type-new';
+                detectionStatus.textContent = '🆕 New Fan';
+                autoDetectionBadge.className = 'fan-type-new';
+                autoDetectionBadge.textContent = 'New Detected';
+            } else {
+                detectionStatus.className = 'fan-type-existing';
+                detectionStatus.textContent = '👥 Existing Fan';
+                autoDetectionBadge.className = 'fan-type-existing';
+                autoDetectionBadge.textContent = 'Existing Detected';
+            }
+            
+            // Show consistency warning if needed
+            if (!isConsistent) {
+                detectionStatus.className = 'fan-type-warning';
+                detectionStatus.textContent = '⚠️ Type Conflict';
+                autoDetectionBadge.className = 'fan-type-warning';
+                autoDetectionBadge.textContent = 'Conflict Detected';
+                
+                showTypeWarning(fanTypeAnalysis.type_validation);
+            } else {
+                hideTypeWarning();
+            }
+            
+            // Update analysis display
+            typeAnalysisDisplay.innerHTML = `
+                <div class="mb-2">
+                    <strong>Detected:</strong> <span class="fan-type-${detectedType}">${detectedType.toUpperCase()}</span><br>
+                    <strong>Interactions:</strong> ${fanTypeAnalysis.interaction_count}<br>
+                    <strong>Stage:</strong> <span class="relationship-badge stage-${fanTypeAnalysis.relationship_stage}">${fanTypeAnalysis.relationship_stage.replace('_', ' ')}</span>
+                </div>
+            `;
+        }
+
+        function showTypeWarning(typeValidation) {
+            const warningAlert = document.getElementById('type-warning-alert');
+            const warningDetails = document.getElementById('type-warning-details');
+            
+            warningDetails.innerHTML = `
+                <strong>Issue:</strong> ${typeValidation.warning}<br>
+                <strong>Recommendation:</strong> ${typeValidation.recommendation}
+            `;
+            
+            warningAlert.style.display = 'block';
+        }
+
+        function hideTypeWarning() {
+            document.getElementById('type-warning-alert').style.display = 'none';
+        }
+
+        // Update memory display for current fan
+        function updateMemoryDisplay(memoryData) {
+            const interactionCounter = document.getElementById('interaction-counter');
+            const relationshipStage = document.getElementById('relationship-stage');
+            const knownInfo = document.getElementById('known-info');
+            
+            if (memoryData.returning_fan) {
+                interactionCounter.textContent = `${memoryData.total_interactions} Previous Interactions`;
+                interactionCounter.style.background = 'var(--memory-glow)';
+                interactionCounter.style.color = '#000';
+                
+                // Update relationship stage
+                const stage = memoryData.relationship_stage || 'unknown';
+                relationshipStage.innerHTML = `<span class="relationship-badge stage-${stage}">${stage.replace('_', ' ')}</span>`;
+                
+                updateKnownInfo(memoryData);
+                knownInfo.style.display = 'block';
+            } else {
+                interactionCounter.textContent = 'New Fan - Building Memory';
+                interactionCounter.style.background = '#6c757d';
+                interactionCounter.style.color = 'white';
+                
+                relationshipStage.innerHTML = '<span class="relationship-badge stage-new">New</span>';
+                knownInfo.style.display = 'none';
+            }
+        }
+
+        function updateKnownInfo(memoryData) {
+            const knownName = document.getElementById('known-name');
+            const knownLocation = document.getElementById('known-location');
+            const knownInterests = document.getElementById('known-interests');
+            
+            if (memoryData.known_name) {
+                knownName.innerHTML = `<strong>Name:</strong> <span style="color: var(--memory-glow);">${memoryData.known_name}</span>`;
+            } else {
+                knownName.innerHTML = '<strong>Name:</strong> <span class="text-muted">Unknown</span>';
+            }
+            
+            if (memoryData.known_location) {
+                knownLocation.innerHTML = `<strong>Location:</strong> <span style="color: var(--memory-glow);">${memoryData.known_location}</span>`;
+            } else {
+                knownLocation.innerHTML = '<strong>Location:</strong> <span class="text-muted">Unknown</span>';
+            }
+            
+            if (memoryData.known_interests && memoryData.known_interests.length > 0) {
+                const interestsBadges = memoryData.known_interests.map(interest => 
+                    `<span class="badge" style="background: var(--memory-glow); color: #000; margin: 2px;">${interest}</span>`
+                ).join('');
+                knownInterests.innerHTML = `<strong>Interests:</strong> ${interestsBadges}`;
+            } else {
+                knownInterests.innerHTML = '<strong>Interests:</strong> <span class="text-muted">None detected</span>';
+            }
+        }
+
+        // Update phase completions display
+        function updatePhaseCompletions(memoryData) {
+            const completions = document.querySelectorAll('.completion-indicator');
+            
+            // Reset all to incomplete
+            completions.forEach(indicator => {
+                indicator.className = 'completion-indicator incomplete';
+            });
+            
+            if (memoryData.known_name) {
+                completions[0].className = 'completion-indicator completed';
+            }
+            if (memoryData.known_location) {
+                completions[1].className = 'completion-indicator completed';
+            }
+            if (memoryData.known_interests && memoryData.known_interests.length > 0) {
+                completions[2].className = 'completion-indicator completed';
+            }
+            // Add emotional and upselling completion logic based on your backend data
+        }
+
+        // Update confidence score with memory boost
+        function updateConfidenceScore(score, memoryBoost = false) {
+            const fill = document.getElementById('confidence-fill');
+            const breakdown = document.getElementById('confidence-breakdown');
+            const percentage = Math.min(100, Math.max(0, score));
+            
+            fill.style.width = percentage + '%';
+            fill.textContent = percentage + '%';
+            
+            if (memoryBoost) {
+                fill.classList.add('memory-boosted');
+                breakdown.textContent = `${percentage}% (Memory Enhanced)`;
+            } else {
+                fill.classList.remove('memory-boosted');
+                breakdown.textContent = `${percentage}% confidence`;
+            }
+        }
+
+        // Load and display session memory
+        async function loadSessionMemory() {
+            try {
+                const response = await fetch('/api/get_session_memory');
+                const data = await response.json();
+                
+                sessionMemoryData = data;
+                updateMemoryViewer(data);
+                
+                console.log('📊 Session memory loaded:', data);
+            } catch (error) {
+                console.error('❌ Failed to load session memory:', error);
+            }
+        }
+
+        function updateMemoryViewer(data) {
+            const fansList = document.getElementById('fans-list');
+            
+            if (data.total_fans === 0) {
+                fansList.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        No fans in memory yet
+                    </div>
+                `;
+                return;
+            }
+
+            let fansHTML = '';
+            for (const [fanId, fanData] of Object.entries(data.fans)) {
+                const detectedInfo = fanData.detected_info || {};
+                const relationshipStage = fanData.relationship_stage || 'new';
+                const totalInteractions = fanData.total_interactions || 0;
+                
+                fansHTML += `
+                    <div class="fan-card" data-fan-id="${fanId}" onclick="selectFan('${fanId}')">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>${detectedInfo.name || fanId}</strong>
+                            <span class="fan-type-${totalInteractions > 0 ? 'existing' : 'new'}">${totalInteractions} msgs</span>
+                        </div>
+                        <div class="mt-1">
+                            <span class="relationship-badge stage-${relationshipStage}">${relationshipStage.replace('_', ' ')}</span>
+                        </div>
+                        <small class="text-muted">
+                            ${detectedInfo.location ? detectedInfo.location + ' • ' : ''}
+                            ${new Date(fanData.last_interaction).toLocaleString()}
+                        </small>
+                    </div>
+                `;
+            }
+            
+            fansList.innerHTML = fansHTML;
+        }
+
+        // Select a fan from the viewer
+        function selectFan(fanId) {
+            selectedFanId = fanId;
+            
+            document.querySelectorAll('.fan-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-fan-id="${fanId}"]`).classList.add('selected');
+            
+            // Auto-fill form with selected fan
+            document.getElementById('fan_id').value = fanId;
+            const fanData = sessionMemoryData.fans[fanId];
+            if (fanData && fanData.total_interactions > 0) {
+                document.getElementById('existing').checked = true;
+            } else {
+                document.getElementById('new').checked = true;
+            }
+            
+            // Load conversation history
+            loadConversationHistory(fanId);
+            
+            document.getElementById('fan-details').style.display = 'block';
+            updateChatStatus(`Selected fan: ${fanId}`);
+        }
+        
+        // Chat control event listeners
+        document.getElementById('clear-chat-btn').addEventListener('click', function() {
+            if (confirm('Clear current conversation?')) {
+                clearChat();
+                updateChatStatus('Conversation cleared');
+            }
+        });
+        
+        document.getElementById('export-chat-btn').addEventListener('click', exportConversation);
+        document.getElementById('copy-last-btn').addEventListener('click', copyLastResponse);
+        
+        document.getElementById('refresh-chat-btn').addEventListener('click', function() {
+            if (selectedFanId) {
+                loadConversationHistory(selectedFanId);
+            } else {
+                updateChatStatus('No fan selected to refresh');
+            }
+        });
+
+        // Event Listeners
+        document.getElementById('refresh-memory-btn').addEventListener('click', loadSessionMemory);
+        
+        document.getElementById('load-fan-btn').addEventListener('click', function() {
+            const fanId = document.getElementById('fan_id').value.trim();
+            if (fanId && sessionMemoryData.fans && sessionMemoryData.fans[fanId]) {
+                selectFan(fanId);
+            } else {
+                updateChatStatus('Fan not found in memory');
+            }
+        });
+
+        document.getElementById('resume-conversation-btn').addEventListener('click', function() {
+            if (selectedFanId) {
+                loadConversationHistory(selectedFanId);
+                document.getElementById('fan_message').focus();
+                updateChatStatus(`Loaded conversation for ${selectedFanId}`);
+            }
+        });
+
+        document.getElementById('reset-fan-btn').addEventListener('click', async function() {
+            if (selectedFanId && confirm(`Reset all memory for ${selectedFanId}?`)) {
+                try {
+                    const response = await fetch(`/api/reset_fan_memory/${selectedFanId}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        updateChatStatus(`Memory reset for ${selectedFanId}`);
+                        clearChat();
+                        loadSessionMemory();
+                        document.getElementById('fan-details').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Failed to reset fan memory:', error);
+                }
+            }
+        });
+        
+        // MAIN GENERATE BUTTON EVENT LISTENER
+        document.getElementById('generate-btn').addEventListener('click', async function() {
+            console.log('🚀 Generate Smart Response Button Clicked');
+            
+            const fanId = document.getElementById('fan_id').value.trim();
+            const creator = document.getElementById('creator').value;
+            const fanTypeEl = document.querySelector('input[name="fan_type"]:checked');
+            const fanMessage = document.getElementById('fan_message').value.trim();
+            const currentPhase = parseInt(document.getElementById('current_phase').value);
+            
+            console.log('📝 Form Values:', { fanId, creator, fanType: fanTypeEl?.value, fanMessage: fanMessage?.substring(0, 50), currentPhase });
+            
+            // Validation
+            if (!fanId) {
+                alert('Please enter a Fan ID for memory tracking');
+                return;
+            }
+            if (!creator) {
+                alert('Please select a creator');
+                return;
+            }
+            if (!fanTypeEl) {
+                alert('Please select fan type');
+                return;
+            }
+            if (!fanMessage) {
+                alert('Please enter fan message');
+                return;
+            }
+            
+            // Add fan message to chat immediately
+            addMessageToChat(fanMessage, true);
+            
+            // Clear the input
+            document.getElementById('fan_message').value = '';
+            
+            // Disable button and show loading
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+            
+            // Reset UI
+            hideTypeWarning();
+            
+            updateChatStatus('🧠 Advanced Fan Type Analysis...');
+            
+            const requestData = {
+                fan_id: fanId,
+                creator: creator,
+                fan_type: fanTypeEl.value,
+                fan_message: fanMessage,
+                current_phase: currentPhase
+            };
+            
+            console.log('📡 Sending Advanced Request:', requestData);
+            
+            try {
+                const response = await fetch('/api/generate_response', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Advanced Response data:', data);
+                
+                if (data.success) {
+                    const detectedType = data.fan_type_analysis.detected_type;
+                    
+                    // Add AI response to chat
+                    addMessageToChat(data.response, false, {
+                        creator: data.creator,
+                        phase: data.framework.current_phase,
+                        confidence: data.framework.confidence_score
+                    });
+                    
+                    // Store last response for copying
+                    lastResponse = data.response;
+                    
+                    // Update all displays
+                    if (data.fan_type_analysis) {
+                        updateFanTypeAnalysis(data.fan_type_analysis);
+                    }
+                    
+                    if (data.memory) {
+                        updateMemoryDisplay(data.memory);
+                        updatePhaseCompletions(data.memory);
+                    }
+                    
+                    if (data.framework && data.analytics) {
+                        updateConfidenceScore(data.framework.confidence_score, data.analytics.memory_boost);
+                    }
+                    
+                    updateChatStatus(`✅ ${detectedType.toUpperCase()} fan response by ${data.creator} - Phase ${data.framework.current_phase}`);
+                    
+                    // Update current fan if not set
+                    if (!selectedFanId) {
+                        selectedFanId = fanId;
+                        const currentFanBadge = document.getElementById('current-fan-badge');
+                        currentFanBadge.textContent = fanId;
+                        currentFanBadge.style.display = 'inline-block';
+                    }
+                    
+                    // Refresh memory viewer
+                    setTimeout(loadSessionMemory, 1000);
+                    
+                } else {
+                    addMessageToChat(`Error: ${data.error}`, false, { creator: 'system' });
+                    updateChatStatus('❌ Failed to generate response');
+                }
+                
+            } catch (error) {
+                console.error('❌ Request failed:', error);
+                addMessageToChat(`Network Error: ${error.message}`, false, { creator: 'system' });
+                updateChatStatus('❌ Connection failed');
+            } finally {
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic me-2"></i>Add to Conversation';
+            }
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSessionMemory();
+            console.log('🎯 Advanced Chat Interface loaded successfully');
+        });
+        
+        // Prevent form submission
+        document.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9512616d4e75edda","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.6.2","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDsgXWpLgoXcPnClfF8p70ki0g%2BbyRNPXZ4GTXg0acnG0udbGYoK7MzWU%2BNrnsaazpBiSYILQxLiCXPkxLFbTyKliHkh4ceKVm5%2FPOWGopzSv59jHWvCkoE9t6FmbJK%2F0NgbDPvXMzPOT%2FxD28OqWQvuW%2BB55diOKA8Rc%2B7E6nx1TJk8RF5SUREPhe879ZvZ%2FIhMqe3U00nkm945ogoTwm7KoC9g93E8eeXuY%2BWDzEM0jsrpt%2FoUASioLnudO4qrzv1DpFs2cgdYHKdPLzhNzfqTD2751OTcZ7dHX2%2B7mSw3fd7Nnsj9yzr1OLUUYrjoCAt7uY2IRTy0jgS9m1vSG8maumUjCNOfz1iL9rB87b%2F%2BcD2i3A6Hl3%2BTWvhN5vSNcbf%2B3kGHDYhWpGxVSSDLo1CWq9Iye1PDZcA2ZQ%2FD2M70nPTPiwVAjmWBro%2BqeLOHsDUWoeoZNTyIWDMGWoS00Hzw%2FQogerEu1wKy5I6Ox6d4i3kgBPUYEKxNKl%2B3hPOMW%2Fg%3D%3D";
+        window.__genspark_locale = "it-IT";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDsgXWpLgoXcPnClfF8p70ki0g+byRNPXZ4GTXg0acnG0udbGYoK7MzWU+NrnsaazpBiSYILQxLiCXPkxLFbTyKliHkh4ceKVm5/POWGopzSv59jHWvCkoE9t6FmbJK/0NgbDPvXMzPOT/xD28OqWQvuW+B55diOKA8Rc+7E6nx1TJk8RF5SUREPhe879ZvZ/IhMqe3U00nkm945ogoTwm7KoC9g93E8eeXuY+WDzEM0jsrpt/oUASioLnudO4qrzv1DpFs2cgdYHKdPLzhNzfqTD2751OTcZ7dHX2+7mSw3fd7Nnsj9yzr1OLUUYrjoCAt7uY2IRTy0jgS9m1vSG8maumUjCNOfz1iL9rB87b/+cD2i3A6Hl3+TWvhN5vSNcbf+3kGHDYhWpGxVSSDLo1CWq9Iye1PDZcA2ZQ/D2M70nPTPiwVAjmWBro+qeLOHsDUWoeoZNTyIWDMGWoS00Hzw/QogerEu1wKy5I6Ox6d4i3kgBPUYEKxNKl+3hPOMW/g==";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
