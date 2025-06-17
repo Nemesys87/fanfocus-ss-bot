@@ -638,44 +638,6 @@ def generate_fan_type_aware_response(creator, declared_fan_type, detected_fan_ty
     except Exception as e:
         print(f"❌ Error in generate_fan_type_aware_response: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
-
-def build_advanced_memory_context(fan_context, detected_fan_type, type_validation):
-    """Build comprehensive memory context for AI prompt"""
-    if detected_fan_type == 'new':
-        return "NEW FAN - First interaction. Focus on warm welcome and basic rapport building."
-    
-    if not fan_context:
-        return "No previous context available."
-    
-    detected_info = fan_context.get('detected_info', {})
-    total_interactions = fan_context.get('total_interactions', 0)
-    conversation_flow = fan_context.get('conversation_flow', {})
-    relationship_stage = determine_relationship_stage(fan_context)
-    
-    context_parts = [
-        f"EXISTING FAN - {total_interactions} previous interactions",
-        f"Relationship stage: {relationship_stage}"
-    ]
-    
-    if detected_info.get('name'):
-        context_parts.append(f"Fan's name: {detected_info['name']}")
-    
-    if detected_info.get('location'):
-        context_parts.append(f"Location: {detected_info['location']}")
-    
-    if detected_info.get('interests'):
-        context_parts.append(f"Interests: {', '.join(detected_info['interests'])}")
-    
-    if detected_info.get('emotional_patterns'):
-        context_parts.append(f"Emotional patterns: {', '.join(detected_info['emotional_patterns'])}")
-    
-    if conversation_flow.get('topics_discussed'):
-        context_parts.append(f"Topics discussed: {', '.join(conversation_flow['topics_discussed'])}")
-    
-    if not type_validation['is_consistent']:
-        context_parts.append(f"⚠️ Type warning: {type_validation['warning']}")
-    
-    return " | ".join(context_parts)
 def build_advanced_memory_context(fan_context, detected_fan_type, type_validation):
     """Build comprehensive memory context for AI prompt"""
     if detected_fan_type == 'new':
