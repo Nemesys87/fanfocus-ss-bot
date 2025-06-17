@@ -3,6 +3,7 @@ import os
 import requests
 import json
 import time
+import urllib.parse
 
 app = Flask(__name__)
 app.secret_key = 'fanfocus-ss-secret-key'
@@ -33,11 +34,12 @@ def generate_response():
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
         if use_streaming:
-            # Return streaming URL for frontend to connect to
+            # Railway-compatible streaming URL with query parameters
+            encoded_message = urllib.parse.quote(fan_message)
             return jsonify({
                 'success': True,
                 'streaming': True,
-                'stream_url': f'/api/stream/{creator}/{fan_type}/{fan_message}'
+                'stream_url': f'/api/stream/{creator}/{fan_type}?message={encoded_message}'
             })
         
         # Regular non-streaming response
@@ -180,24 +182,36 @@ Respond as Venessa:
         print(f"Error in generate_regular_response: {str(e)}")  # DEBUG
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
-@app.route('/api/stream/<creator>/<fan_type>/<path:fan_message>')
-def generate_stream(creator, fan_type, fan_message):
-    """Streaming endpoint using Server-Sent Events"""
+@app.route('/api/stream/<creator>/<fan_type>', methods=['GET'])
+def generate_stream(creator, fan_type):
+    """Streaming endpoint using Server-Sent Events - Railway Optimized"""
+    
+    # Get fan_message from query parameter instead of URL path
+    fan_message = request.args.get('message', '')
+    
+    if not fan_message:
+        return jsonify({'error': 'Missing fan message'}), 400
+    
+    print(f"Streaming request: {creator}, {fan_type}, {fan_message}")  # DEBUG
+    
     def stream_generator():
         try:
-            yield f"data: {json.dumps({'status': 'starting', 'creator': creator})}\n\n"
+            # Send immediate connection test
+            yield f"data: {json.dumps({'status': 'connected', 'message': 'Connection established'})}\n\n"
             
             api_key = os.environ.get('GOOGLE_AI_API_KEY')
             if not api_key:
                 yield f"data: {json.dumps({'error': 'API key not configured'})}\n\n"
                 return
             
-            # Use same prompts as regular response
+            yield f"data: {json.dumps({'status': 'starting', 'creator': creator})}\n\n"
+            
+            # Creator-specific prompts (simplified for streaming)
             creator_prompts = {
-                'ella': f"You are Ella Blair, Brazilian OnlyFans creator. Respond warmly to: '{fan_message}' and ask for their name naturally.",
-                'vanp': f"You are Vanp, dominant Brazilian creator. Respond confidently to: '{fan_message}' and tease them to share their name.",
-                'yana': f"You are Yana Sinner, artistic creator. Respond creatively to: '{fan_message}' and engage them to share their name.",
-                'venessa': f"You are Venessa, Latina gamer creator. Respond energetically to: '{fan_message}' and warmly ask for their name."
+                'ella': f"You are Ella Blair, bubbly Brazilian OnlyFans creator. Respond warmly to: '{fan_message}' and ask for their name naturally. Use emojis and Portuguese touches.",
+                'vanp': f"You are Vanp, dominant Brazilian creator. Respond confidently to: '{fan_message}' and tease them to share their name. Be commanding.",
+                'yana': f"You are Yana Sinner, artistic nerdy creator. Respond creatively to: '{fan_message}' and engage them to share their name. Reference art/gaming.",
+                'venessa': f"You are Venessa, energetic Latina gamer creator. Respond with energy to: '{fan_message}' and warmly ask for their name. Use Spanish touches."
             }
             
             prompt = creator_prompts.get(creator, creator_prompts['ella'])
@@ -215,12 +229,17 @@ def generate_stream(creator, fan_type, fan_message):
                 }
             }
             
+            print("Making streaming API call...")  # DEBUG
+            
+            # Make API call with shorter timeout for streaming
             response = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
                 headers=headers,
                 json=payload,
-                timeout=120
+                timeout=60  # Reduced timeout for Railway
             )
+            
+            print(f"Streaming API Response status: {response.status_code}")  # DEBUG
             
             if response.status_code == 200:
                 result = response.json()
@@ -232,33 +251,52 @@ def generate_stream(creator, fan_type, fan_message):
                         if len(candidate['content']['parts']) > 0:
                             full_response = candidate['content']['parts'][0].get('text', '').strip()
                             
+                            print(f"Streaming response generated: {len(full_response)} chars")  # DEBUG
+                            
                             if full_response:
                                 yield f"data: {json.dumps({'status': 'generating'})}\n\n"
                                 
-                                # Stream character by character
+                                # Stream response in chunks for Railway
                                 accumulated_text = ""
-                                for i, char in enumerate(full_response):
-                                    accumulated_text += char
-                                    
-                                    if i % 3 == 0 or i == len(full_response) - 1:
-                                        yield f"data: {json.dumps({'chunk': char, 'accumulated': accumulated_text})}\n\n"
-                                        time.sleep(0.05)
+                                chunk_size = 5  # Bigger chunks for Railway stability
                                 
+                                for i in range(0, len(full_response), chunk_size):
+                                    chunk = full_response[i:i+chunk_size]
+                                    accumulated_text += chunk
+                                    
+                                    yield f"data: {json.dumps({'chunk': chunk, 'accumulated': accumulated_text})}\n\n"
+                                    time.sleep(0.1)  # Slower for Railway stability
+                                
+                                # Final completion
                                 yield f"data: {json.dumps({'status': 'complete', 'final_response': accumulated_text, 'creator': creator, 'fan_type': fan_type, 'kyc_step': 'Phase 0 - Step 1: Name Collection', 'framework': 'Saints & Sinners Framework Active'})}\n\n"
+                            else:
+                                yield f"data: {json.dumps({'error': 'Empty response from AI'})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'error': 'Invalid response structure'})}\n\n"
+                else:
+                    yield f"data: {json.dumps({'error': 'No response candidates'})}\n\n"
             else:
-                yield f"data: {json.dumps({'error': f'API Error {response.status_code}'})}\n\n"
+                yield f"data: {json.dumps({'error': f'API Error {response.status_code}: {response.text}'})}\n\n"
                 
         except Exception as e:
+            print(f"Streaming error: {str(e)}")  # DEBUG
             yield f"data: {json.dumps({'error': f'Streaming error: {str(e)}'})}\n\n"
     
-    return Response(stream_generator(), mimetype='text/plain', headers={
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'X-Accel-Buffering': 'no'
-    })
+    # Railway-optimized headers
+    return Response(
+        stream_generator(), 
+        mimetype='text/event-stream',  # Changed from text/plain
+        headers={
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Cache-Control',
+            'X-Accel-Buffering': 'no',
+            'Content-Type': 'text/event-stream'  # Explicit content type
+        }
+    )
 
 @app.route('/api/test_ai')
 def test_ai():
@@ -272,7 +310,8 @@ def test_ai():
             'status': 'OK',
             'api_key_present': bool(api_key),
             'model': 'gemini-2.5-pro-preview-06-05',
-            'environment': 'Railway Production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Development'
+            'environment': 'Railway Production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Development',
+            'streaming_optimized': True
         })
         
     except Exception as e:
@@ -291,7 +330,7 @@ if __name__ == '__main__':
     
     if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production':
         print("🚀 Saints & Sinners FanFocus - RAILWAY PRODUCTION")
-        print("⚡ Streaming AI optimized for unlimited tokens")
+        print("⚡ Streaming AI optimized for Railway + unlimited tokens")
         print("🎯 Framework S&S Active")
     else:
         print("🔧 Development Mode - Local Testing")
