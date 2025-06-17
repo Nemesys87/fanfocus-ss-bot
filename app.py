@@ -45,7 +45,7 @@ def generate_response():
 
 @app.route('/api/stream/<creator>/<fan_type>/<path:fan_message>')
 def generate_stream(creator, fan_type, fan_message):
-    """Streaming endpoint using Server-Sent Events"""
+    """Streaming endpoint using Server-Sent Events - UNLIMITED TOKENS"""
     def stream_generator():
         try:
             api_key = os.environ.get('GOOGLE_AI_API_KEY')
@@ -72,7 +72,7 @@ Respond as Ella Blair:
 - Acknowledge their message warmly
 - Share your bubbly, positive energy  
 - Naturally ask for their name in a sweet way
-- Keep under 200 characters
+- Be authentic and engaging
 - Use your signature Brazilian warmth""",
 
                 'vanp': f"""You are Vanp, a dominant, intelligent Brazilian OnlyFans creator.
@@ -89,7 +89,7 @@ Respond as Vanp:
 - Acknowledge their message with confidence
 - Show your intelligent, dominant personality
 - Tease them into wanting to share their name
-- Keep under 200 characters
+- Be commanding yet engaging
 - Maintain your bratty, commanding edge""",
 
                 'yana': f"""You are Yana Sinner, an artistic, nerdy OnlyFans creator and lingerie designer.
@@ -106,7 +106,7 @@ Respond as Yana Sinner:
 - Acknowledge their message with artistic flair
 - Show your creative, nerdy personality
 - Engage their curiosity to share their name
-- Keep under 200 characters
+- Be authentic and creative
 - Reference your artistic or gaming interests if relevant""",
 
                 'venessa': f"""You are Venessa, a vibrant Latina gamer girl OnlyFans creator.
@@ -123,7 +123,7 @@ Respond as Venessa:
 - Acknowledge their message with Latina energy
 - Show your gamer girl personality
 - Use cultural warmth to encourage name sharing
-- Keep under 200 characters
+- Be energetic and engaging
 - Reference gaming or cultural background if relevant"""
             }
             
@@ -136,7 +136,7 @@ Respond as Venessa:
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {
-                    "maxOutputTokens": 10000,
+                    "maxOutputTokens": 8192,
                     "temperature": 0.8,
                     "topK": 40,
                     "topP": 0.9
@@ -148,7 +148,7 @@ Respond as Venessa:
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
                 headers=headers,
                 json=payload,
-                timeout=60
+                timeout=120
             )
             
             if response.status_code == 200:
@@ -175,12 +175,8 @@ Respond as Venessa:
                                         yield f"data: {json.dumps({'chunk': char, 'accumulated': accumulated_text})}\n\n"
                                         time.sleep(0.05)  # Small delay for typing effect
                                 
-                                # Ensure character limit
-                                if len(accumulated_text) > 250:
-                                    accumulated_text = accumulated_text[:247] + "..."
-                                
-                                # Send completion
-                                yield f"data: {json.dumps({'status': 'complete', 'final_response': accumulated_text, 'creator': creator, 'fan_type': fan_type, 'kyc_step': 'Phase 0 - Step 1: Name Collection', 'framework': 'Saints & Sinners Framework Active', 'ai_model': 'Gemini 2.5 Pro (Streaming)'})}\n\n"
+                                # Send completion - NO CHARACTER LIMITS for streaming
+                                yield f"data: {json.dumps({'status': 'complete', 'final_response': accumulated_text, 'creator': creator, 'fan_type': fan_type, 'kyc_step': 'Phase 0 - Step 1: Name Collection', 'framework': 'Saints & Sinners Framework Active', 'ai_model': 'Gemini 2.5 Pro (Unlimited Streaming)'})}\n\n"
                             else:
                                 yield f"data: {json.dumps({'error': 'Empty response from AI'})}\n\n"
                     else:
@@ -194,9 +190,12 @@ Respond as Venessa:
             yield f"data: {json.dumps({'error': f'Streaming error: {str(e)}'})}\n\n"
     
     return Response(stream_generator(), mimetype='text/plain', headers={
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'X-Accel-Buffering': 'no'
     })
 
 def generate_regular_response(creator, fan_type, fan_message):
@@ -207,19 +206,19 @@ def generate_regular_response(creator, fan_type, fan_message):
             return jsonify({'success': False, 'error': 'API key not configured'}), 500
         
         # Simple prompt for regular mode
-        prompt = f"Respond as {creator} to: {fan_message}. Ask for their name. Keep under 200 characters."
+        prompt = f"Respond as {creator} to: {fan_message}. Ask for their name naturally."
         
         headers = {'Content-Type': 'application/json'}
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"maxOutputTokens": 2000}
+            "generationConfig": {"maxOutputTokens": 4000}
         }
         
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
-            timeout=30
+            timeout=60
         )
         
         if response.status_code == 200:
@@ -229,9 +228,6 @@ def generate_regular_response(creator, fan_type, fan_message):
                 if 'content' in candidate and 'parts' in candidate['content']:
                     if len(candidate['content']['parts']) > 0:
                         ai_response = candidate['content']['parts'][0].get('text', '').strip()
-                        
-                        if len(ai_response) > 250:
-                            ai_response = ai_response[:247] + "..."
                         
                         return jsonify({
                             'success': True,
@@ -258,7 +254,8 @@ def test_ai():
         return jsonify({
             'status': 'OK',
             'api_key_present': bool(api_key),
-            'model': 'gemini-2.5-pro-preview-06-05'
+            'model': 'gemini-2.5-pro-preview-06-05',
+            'environment': 'Railway Production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Development'
         })
         
     except Exception as e:
@@ -274,4 +271,12 @@ def internal_error(error):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    
+    # Railway detection
+    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production':
+        print("🚀 Saints & Sinners FanFocus - RAILWAY PRODUCTION")
+        print("⚡ Streaming AI optimized for unlimited tokens")
+        print("🎯 Framework S&S Active")
+    else:
+        print("🔧 Development Mode - Local Testing")
+        app.run(host='0.0.0.0', port=port, debug=True)
