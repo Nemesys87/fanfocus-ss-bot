@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FanFocusGPT - Saints & Sinners Multi-Phase + Memory Viewer</title>
+    <title>FanFocusGPT - Saints & Sinners Advanced Fan Type Intelligence</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,6 +11,9 @@
             --ss-primary: #667eea;
             --ss-secondary: #764ba2;
             --memory-glow: #00ffaa;
+            --warning-color: #ff8c00;
+            --error-color: #dc3545;
+            --success-color: #28a745;
         }
 
         body {
@@ -24,7 +27,7 @@
             border-radius: 20px;
             padding: 40px;
             margin: 20px auto;
-            max-width: 1600px;
+            max-width: 1800px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         
@@ -53,7 +56,7 @@
             border-radius: 15px;
             padding: 30px;
             color: white;
-            min-height: 300px;
+            min-height: 400px;
         }
 
         .memory-section {
@@ -64,7 +67,7 @@
             color: white;
         }
 
-        .memory-viewer-section {
+        .fan-type-section {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
             border-radius: 15px;
             padding: 25px;
@@ -72,7 +75,7 @@
             color: white;
         }
 
-        .memory-card {
+        .memory-card, .fan-type-card {
             background: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
             padding: 15px;
@@ -100,6 +103,103 @@
             border-left-color: #ffd700;
         }
 
+        /* Fan Type Indicators */
+        .fan-type-new {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .fan-type-existing {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .fan-type-warning {
+            background: linear-gradient(45deg, var(--warning-color), #e55a00);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        /* Relationship Stage Badges */
+        .stage-new { background: #6c757d; }
+        .stage-first_contact { background: #17a2b8; }
+        .stage-getting_acquainted { background: #28a745; }
+        .stage-information_gathering { background: #ffc107; color: #000; }
+        .stage-building_rapport { background: #fd7e14; }
+        .stage-deepening_relationship { background: #6f42c1; }
+        .stage-emotional_connection { background: #e83e8c; }
+        .stage-established_relationship { background: #dc3545; }
+
+        .relationship-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        /* Type Validation Warning */
+        .type-warning-alert {
+            background: linear-gradient(45deg, var(--warning-color), #ffb347);
+            color: #000;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ff4500;
+            animation: warningPulse 3s infinite;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 140, 0, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(255, 140, 0, 0.6); }
+        }
+
+        /* Phase Progression Indicators */
+        .phase-indicator {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .phase-0 { background: #17a2b8; color: white; }
+        .phase-1 { background: #ffc107; color: black; }
+        .phase-2 { background: #fd7e14; color: white; }
+        .phase-3 { background: #6f42c1; color: white; }
+        .phase-4 { background: #28a745; color: white; }
+
+        .phase-completed {
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            transform: scale(1.05);
+        }
+
+        .phase-suggested {
+            border: 2px solid #ffd700;
+            animation: suggest 2s infinite;
+        }
+
+        @keyframes suggest {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         .memory-indicator {
             background: var(--memory-glow);
             color: #000;
@@ -118,6 +218,12 @@
             font-size: 1.1rem;
             width: 100%;
             color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
         }
 
         .btn-memory-action {
@@ -154,6 +260,16 @@
             border-left-color: var(--memory-glow);
             background: rgba(0, 255, 170, 0.1);
         }
+
+        .new-fan-response {
+            border-left-color: var(--success-color);
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .existing-fan-response {
+            border-left-color: #007bff;
+            background: rgba(0, 123, 255, 0.1);
+        }
         
         .copy-btn {
             background: rgba(255, 255, 255, 0.25);
@@ -171,14 +287,6 @@
             border-radius: 10px;
         }
 
-        .returning-fan-alert {
-            background: linear-gradient(45deg, var(--memory-glow), #00ff88);
-            color: #000;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-
         .framework-badge {
             background: linear-gradient(45deg, var(--ss-primary), var(--ss-secondary));
             color: white;
@@ -188,31 +296,64 @@
             font-weight: bold;
         }
 
-        .nav-tabs .nav-link {
-            color: var(--ss-primary);
-            border: none;
-            background: rgba(102, 126, 234, 0.1);
-            margin-right: 5px;
-            border-radius: 8px 8px 0 0;
+        .auto-detection-display {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
         }
 
-        .nav-tabs .nav-link.active {
-            background: var(--ss-primary);
+        .confidence-bar {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(45deg, var(--success-color), #20c997);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .memory-boosted {
+            background: linear-gradient(45deg, var(--memory-glow), #00cc88) !important;
+        }
+
+        .phase-completion-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .completion-indicator {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        .completed {
+            background: var(--success-color);
             color: white;
         }
 
-        .stats-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 15px;
-            margin: 5px 0;
-            text-align: center;
+        .incomplete {
+            background: #6c757d;
+            color: white;
         }
 
-        .stats-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--memory-glow);
+        .in-progress {
+            background: var(--warning-color);
+            color: white;
         }
     </style>
 </head>
@@ -221,16 +362,17 @@
         <div class="main-container">
             <div class="header-section">
                 <h1 class="display-4">🎯 FanFocusGPT</h1>
-                <p class="lead text-muted">Saints & Sinners Multi-Phase Framework + Memory Viewer</p>
+                <p class="lead text-muted">Saints & Sinners Advanced Fan Type Intelligence</p>
                 <div class="mt-2">
                     <span class="framework-badge">🚀 Multi-Phase Active</span>
-                    <span class="memory-indicator ms-2">🧠 Memory Viewer</span>
+                    <span class="memory-indicator ms-2">🧠 Fan Type Intelligence</span>
+                    <span class="fan-type-new ms-2">🔍 Auto-Detection</span>
                 </div>
             </div>
             
             <div class="row">
-                <!-- Left Column -->
-                <div class="col-lg-4">
+                <!-- Left Column: Input & Controls -->
+                <div class="col-lg-3">
                     <div class="form-section">
                         <h4 class="mb-4"><i class="fas fa-user-circle me-2"></i>Creator & Fan Setup</h4>
                         
@@ -241,7 +383,7 @@
                                     placeholder="e.g., marco_italy, sarah_gamer..." 
                                     value="marco_italy">
                                 <button class="btn btn-memory-action" id="load-fan-btn" type="button">
-                                    <i class="fas fa-search"></i> Load
+                                    <i class="fas fa-search"></i>
                                 </button>
                             </div>
                         </div>
@@ -258,7 +400,9 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Fan Type</label>
+                            <label class="form-label fw-bold">Fan Type 
+                                <span class="fan-type-new" id="auto-detection-badge">Auto-Detecting</span>
+                            </label>
                             <div class="row">
                                 <div class="col-6">
                                     <div class="form-check">
@@ -273,6 +417,10 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="auto-detection-display" id="detection-display" style="display: none;">
+                                <small><strong>Auto-Detected:</strong> <span id="detected-type"></span></small><br>
+                                <small><strong>Declared:</strong> <span id="declared-type"></span></small>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -284,6 +432,7 @@
                                 <option value="3">Phase 3: Engagement Building</option>
                                 <option value="4">Phase 4: Upselling Opportunities</option>
                             </select>
+                            <small class="text-muted">Auto-adjusts based on fan history</small>
                         </div>
                         
                         <div class="mb-4">
@@ -293,17 +442,47 @@
                         </div>
                         
                         <button type="button" class="btn btn-generate" id="generate-btn">
-                            <i class="fas fa-magic me-2"></i>Generate Memory Response
+                            <i class="fas fa-magic me-2"></i>Generate Smart Response
                         </button>
                     </div>
 
-                    <!-- Memory Section -->
+                    <!-- Phase Completion Status -->
+                    <div class="analytics-section">
+                        <h5><i class="fas fa-chart-line me-2"></i>Phase Completions</h5>
+                        <div class="phase-completion-grid" id="phase-completions">
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-user"></i><br>
+                                <small>Name</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-map-marker"></i><br>
+                                <small>Location</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-heart"></i><br>
+                                <small>Interests</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-comments"></i><br>
+                                <small>Emotional</small>
+                            </div>
+                            <div class="completion-indicator incomplete">
+                                <i class="fas fa-dollar-sign"></i><br>
+                                <small>Upselling</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Fan Memory -->
                     <div class="memory-section">
                         <h5><i class="fas fa-brain me-2"></i>Current Fan Memory</h5>
                         
                         <div id="memory-status" class="memory-card">
                             <div id="interaction-counter" style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 20px; display: inline-block; font-weight: bold;">
                                 New Fan - No Previous Data
+                            </div>
+                            <div id="relationship-stage" class="mt-2">
+                                <span class="relationship-badge stage-new">New</span>
                             </div>
                         </div>
 
@@ -316,16 +495,23 @@
                     </div>
                 </div>
                 
-                <!-- Middle Column -->
+                <!-- Middle Column: AI Response -->
                 <div class="col-lg-5">
                     <div class="response-section">
                         <h4><i class="fas fa-robot me-2"></i>AI Response</h4>
                         
-                        <div id="status-display" style="margin-bottom: 15px;">Ready to generate memory-enhanced response...</div>
+                        <div id="status-display" style="margin-bottom: 15px;">Ready to generate smart response...</div>
                         
-                        <div class="returning-fan-alert" id="returning-fan-alert" style="display: none;">
-                            <i class="fas fa-brain me-2"></i><strong>Returning Fan Detected!</strong>
-                            <div id="returning-fan-details"></div>
+                        <!-- Type Validation Warning -->
+                        <div class="type-warning-alert" id="type-warning-alert" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-2"></i><strong>Fan Type Warning!</strong>
+                            <div id="type-warning-details"></div>
+                        </div>
+
+                        <!-- Fan Type Detection Results -->
+                        <div class="auto-detection-display" id="fan-type-results" style="display: none;">
+                            <strong><i class="fas fa-search me-1"></i>Auto-Detection Results:</strong><br>
+                            <div id="detection-results-content"></div>
                         </div>
                         
                         <div class="response-text" id="ai-response" style="display: none;">
@@ -336,27 +522,59 @@
                             <i class="fas fa-copy me-1"></i>Copy Response
                         </button>
 
+                        <!-- Enhanced Framework Info -->
                         <div id="framework-info" style="display: none; margin-top: 15px;">
                             <div style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px;">
                                 <strong><i class="fas fa-cogs me-1"></i>Framework Analysis:</strong>
                                 <div id="phase-info"></div>
                                 <div id="category-info"></div>
+                                <div id="progression-info"></div>
+                                <div id="recommendation-info"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column -->
-                <div class="col-lg-3">
-                    <div class="memory-viewer-section">
+                <!-- Right Column: Advanced Analytics -->
+                <div class="col-lg-4">
+                    <!-- Fan Type Intelligence -->
+                    <div class="fan-type-section">
+                        <h5><i class="fas fa-user-cog me-2"></i>Fan Type Intelligence</h5>
+                        
+                        <div class="fan-type-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Detection Status:</strong>
+                                <span id="detection-status" class="fan-type-new">Ready</span>
+                            </div>
+                            <div id="type-analysis-display">
+                                <small class="text-muted">Waiting for analysis...</small>
+                            </div>
+                        </div>
+
+                        <div class="fan-type-card">
+                            <strong>Confidence Score:</strong>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="confidence-fill" style="width: 0%;">0%</div>
+                            </div>
+                            <small id="confidence-breakdown">Base confidence</small>
+                        </div>
+
+                        <div class="fan-type-card" id="relationship-analysis" style="display: none;">
+                            <strong>Relationship Analysis:</strong>
+                            <div id="relationship-details"></div>
+                        </div>
+                    </div>
+
+                    <!-- Memory Viewer -->
+                    <div class="analytics-section">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5><i class="fas fa-database me-2"></i>Memory Viewer</h5>
+                            <h5><i class="fas fa-database me-2"></i>Session Fans</h5>
                             <button class="btn btn-memory-action" id="refresh-memory-btn">
                                 <i class="fas fa-sync"></i>
                             </button>
                         </div>
 
-                        <div id="fans-list" style="max-height: 400px; overflow-y: auto;">
+                        <div id="fans-list" style="max-height: 300px; overflow-y: auto;">
                             <div class="text-center text-muted p-3">
                                 <i class="fas fa-inbox fa-2x mb-2"></i><br>
                                 No fans in memory yet
@@ -364,12 +582,16 @@
                         </div>
                     </div>
 
+                    <!-- Selected Fan Details -->
                     <div class="analytics-section" id="fan-details" style="display: none;">
-                        <h5><i class="fas fa-user-cog me-2"></i>Fan Details</h5>
+                        <h5><i class="fas fa-user-cog me-2"></i>Fan Analytics</h5>
                         <div id="selected-fan-info"></div>
                         <div class="mt-3">
                             <button class="btn btn-memory-action w-100" id="resume-conversation-btn">
                                 <i class="fas fa-play"></i> Resume Conversation
+                            </button>
+                            <button class="btn btn-memory-action w-100 mt-2" id="reset-fan-btn" style="background: var(--error-color);">
+                                <i class="fas fa-trash"></i> Reset Fan Memory
                             </button>
                         </div>
                     </div>
@@ -382,6 +604,7 @@
         let finalResponse = '';
         let sessionMemoryData = {};
         let selectedFanId = null;
+        let currentAnalysis = {};
         
         // Update status function
         function updateStatus(message) {
@@ -389,11 +612,14 @@
             console.log('📱 Status:', message);
         }
         
-        // Show response function
-        function showResponse(text, isError = false, memoryEnhanced = false) {
+        // Show response function with fan type awareness
+        function showResponse(text, isError = false, fanType = null) {
             const responseDiv = document.getElementById('ai-response');
             responseDiv.textContent = text;
             responseDiv.style.display = 'block';
+            
+            // Reset classes
+            responseDiv.classList.remove('memory-enhanced-response', 'new-fan-response', 'existing-fan-response');
             
             if (isError) {
                 responseDiv.style.color = '#ffcccb';
@@ -401,28 +627,93 @@
                 document.getElementById('copy-btn').style.display = 'none';
             } else {
                 responseDiv.style.color = 'white';
-                if (memoryEnhanced) {
-                    responseDiv.classList.add('memory-enhanced-response');
+                
+                // Apply fan type-specific styling
+                if (fanType === 'new') {
+                    responseDiv.classList.add('new-fan-response');
+                } else if (fanType === 'existing') {
+                    responseDiv.classList.add('existing-fan-response');
                 }
+                
                 document.getElementById('copy-btn').style.display = 'block';
                 finalResponse = text;
             }
         }
 
+        // Update fan type analysis display
+        function updateFanTypeAnalysis(fanTypeAnalysis) {
+            const detectionStatus = document.getElementById('detection-status');
+            const typeAnalysisDisplay = document.getElementById('type-analysis-display');
+            const autoDetectionBadge = document.getElementById('auto-detection-badge');
+            
+            const detectedType = fanTypeAnalysis.detected_type;
+            const isConsistent = fanTypeAnalysis.type_validation.is_consistent;
+            
+            // Update detection status
+            if (detectedType === 'new') {
+                detectionStatus.className = 'fan-type-new';
+                detectionStatus.textContent = '🆕 New Fan';
+                autoDetectionBadge.className = 'fan-type-new';
+                autoDetectionBadge.textContent = 'New Detected';
+            } else {
+                detectionStatus.className = 'fan-type-existing';
+                detectionStatus.textContent = '👥 Existing Fan';
+                autoDetectionBadge.className = 'fan-type-existing';
+                autoDetectionBadge.textContent = 'Existing Detected';
+            }
+            
+            // Show consistency warning if needed
+            if (!isConsistent) {
+                detectionStatus.className = 'fan-type-warning';
+                detectionStatus.textContent = '⚠️ Type Conflict';
+                autoDetectionBadge.className = 'fan-type-warning';
+                autoDetectionBadge.textContent = 'Conflict Detected';
+                
+                showTypeWarning(fanTypeAnalysis.type_validation);
+            } else {
+                hideTypeWarning();
+            }
+            
+            // Update analysis display
+            typeAnalysisDisplay.innerHTML = `
+                <div class="mb-2">
+                    <strong>Detected:</strong> <span class="fan-type-${detectedType}">${detectedType.toUpperCase()}</span><br>
+                    <strong>Interactions:</strong> ${fanTypeAnalysis.interaction_count}<br>
+                    <strong>Stage:</strong> <span class="relationship-badge stage-${fanTypeAnalysis.relationship_stage}">${fanTypeAnalysis.relationship_stage.replace('_', ' ')}</span>
+                </div>
+            `;
+        }
+
+        function showTypeWarning(typeValidation) {
+            const warningAlert = document.getElementById('type-warning-alert');
+            const warningDetails = document.getElementById('type-warning-details');
+            
+            warningDetails.innerHTML = `
+                <strong>Issue:</strong> ${typeValidation.warning}<br>
+                <strong>Recommendation:</strong> ${typeValidation.recommendation}
+            `;
+            
+            warningAlert.style.display = 'block';
+        }
+
+        function hideTypeWarning() {
+            document.getElementById('type-warning-alert').style.display = 'none';
+        }
+
         // Update memory display for current fan
         function updateMemoryDisplay(memoryData) {
             const interactionCounter = document.getElementById('interaction-counter');
+            const relationshipStage = document.getElementById('relationship-stage');
             const knownInfo = document.getElementById('known-info');
-            const returningFanAlert = document.getElementById('returning-fan-alert');
             
             if (memoryData.returning_fan) {
                 interactionCounter.textContent = `${memoryData.total_interactions} Previous Interactions`;
                 interactionCounter.style.background = 'var(--memory-glow)';
                 interactionCounter.style.color = '#000';
                 
-                const returningDetails = document.getElementById('returning-fan-details');
-                returningDetails.innerHTML = `Welcome back! We have ${memoryData.total_interactions} previous interactions on record.`;
-                returningFanAlert.style.display = 'block';
+                // Update relationship stage
+                const stage = memoryData.relationship_stage || 'unknown';
+                relationshipStage.innerHTML = `<span class="relationship-badge stage-${stage}">${stage.replace('_', ' ')}</span>`;
                 
                 updateKnownInfo(memoryData);
                 knownInfo.style.display = 'block';
@@ -430,12 +721,21 @@
                 interactionCounter.textContent = 'New Fan - Building Memory';
                 interactionCounter.style.background = '#6c757d';
                 interactionCounter.style.color = 'white';
-                returningFanAlert.style.display = 'none';
+                
+                relationshipStage.innerHTML = '<span class="relationship-badge stage-new">New</span>';
                 knownInfo.style.display = 'none';
             }
         }
 
         function updateKnownInfo(memoryData) {
+            const knownName = document.getElementById('known-name');
+            const knownLocation = document.getElementById('known-location');
+            const knownInterests = document.getElementById('known-interests');
+            
+            if (memoryData.known_name) {
+                knownName.innerHTML = `<strong>Name:</strong> <span style="color: var(--memory-glow);">${memoryData.known_name}</span>`;
+            } else {
+                        function updateKnownInfo(memoryData) {
             const knownName = document.getElementById('known-name');
             const knownLocation = document.getElementById('known-location');
             const knownInterests = document.getElementById('known-interests');
@@ -459,6 +759,45 @@
                 knownInterests.innerHTML = `<strong>Interests:</strong> ${interestsBadges}`;
             } else {
                 knownInterests.innerHTML = '<strong>Interests:</strong> <span class="text-muted">None detected</span>';
+            }
+        }
+
+        // Update phase completions display
+        function updatePhaseCompletions(memoryData) {
+            const completions = document.querySelectorAll('.completion-indicator');
+            
+            // Reset all to incomplete
+            completions.forEach(indicator => {
+                indicator.className = 'completion-indicator incomplete';
+            });
+            
+            if (memoryData.known_name) {
+                completions[0].className = 'completion-indicator completed';
+            }
+            if (memoryData.known_location) {
+                completions[1].className = 'completion-indicator completed';
+            }
+            if (memoryData.known_interests && memoryData.known_interests.length > 0) {
+                completions[2].className = 'completion-indicator completed';
+            }
+            // Add emotional and upselling completion logic based on your backend data
+        }
+
+        // Update confidence score with memory boost
+        function updateConfidenceScore(score, memoryBoost = false) {
+            const fill = document.getElementById('confidence-fill');
+            const breakdown = document.getElementById('confidence-breakdown');
+            const percentage = Math.min(100, Math.max(0, score));
+            
+            fill.style.width = percentage + '%';
+            fill.textContent = percentage + '%';
+            
+            if (memoryBoost) {
+                fill.classList.add('memory-boosted');
+                breakdown.textContent = `${percentage}% (Memory Enhanced)`;
+            } else {
+                fill.classList.remove('memory-boosted');
+                breakdown.textContent = `${percentage}% confidence`;
             }
         }
 
@@ -493,12 +832,17 @@
             let fansHTML = '';
             for (const [fanId, fanData] of Object.entries(data.fans)) {
                 const detectedInfo = fanData.detected_info || {};
+                const relationshipStage = fanData.relationship_stage || 'new';
+                const totalInteractions = fanData.total_interactions || 0;
                 
                 fansHTML += `
                     <div class="fan-card" data-fan-id="${fanId}" onclick="selectFan('${fanId}')">
                         <div class="d-flex justify-content-between align-items-center">
                             <strong>${detectedInfo.name || fanId}</strong>
-                            <small>${fanData.total_interactions} msgs</small>
+                            <span class="fan-type-${totalInteractions > 0 ? 'existing' : 'new'}">${totalInteractions} msgs</span>
+                        </div>
+                        <div class="mt-1">
+                            <span class="relationship-badge stage-${relationshipStage}">${relationshipStage.replace('_', ' ')}</span>
                         </div>
                         <small class="text-muted">
                             ${detectedInfo.location ? detectedInfo.location + ' • ' : ''}
@@ -523,8 +867,10 @@
             // Auto-fill form with selected fan
             document.getElementById('fan_id').value = fanId;
             const fanData = sessionMemoryData.fans[fanId];
-            if (fanData && fanData.total_interactions > 1) {
+            if (fanData && fanData.total_interactions > 0) {
                 document.getElementById('existing').checked = true;
+            } else {
+                document.getElementById('new').checked = true;
             }
             
             document.getElementById('fan-details').style.display = 'block';
@@ -535,9 +881,19 @@
             const info = document.getElementById('framework-info');
             const phaseInfo = document.getElementById('phase-info');
             const categoryInfo = document.getElementById('category-info');
+            const progressionInfo = document.getElementById('progression-info');
+            const recommendationInfo = document.getElementById('recommendation-info');
             
             phaseInfo.innerHTML = `<strong>Phase ${framework.current_phase}:</strong> ${framework.phase_name}`;
             categoryInfo.innerHTML = `<strong>Category:</strong> ${framework.fan_category}`;
+            
+            if (framework.current_phase != framework.suggested_next_phase) {
+                progressionInfo.innerHTML = `<strong>⬆️ Suggested:</strong> Phase ${framework.suggested_next_phase}`;
+                progressionInfo.style.color = '#28a745';
+            } else {
+                progressionInfo.innerHTML = `<strong>Continue Phase ${framework.current_phase}</strong>`;
+                progressionInfo.style.color = '#ffc107';
+            }
             
             info.style.display = 'block';
         }
@@ -558,13 +914,9 @@
             }
         });
 
-        // Refresh memory button
-        document.getElementById('refresh-memory-btn').addEventListener('click', function() {
-            loadSessionMemory();
-            updateStatus('Memory refreshed');
-        });
-
-        // Load fan button
+        // Event Listeners
+        document.getElementById('refresh-memory-btn').addEventListener('click', loadSessionMemory);
+        
         document.getElementById('load-fan-btn').addEventListener('click', function() {
             const fanId = document.getElementById('fan_id').value.trim();
             if (fanId && sessionMemoryData.fans && sessionMemoryData.fans[fanId]) {
@@ -574,19 +926,35 @@
             }
         });
 
-        // Resume conversation button
         document.getElementById('resume-conversation-btn').addEventListener('click', function() {
             if (selectedFanId) {
                 document.getElementById('fan_message').focus();
                 updateStatus(`Ready to continue with ${selectedFanId}`);
             }
         });
+
+        document.getElementById('reset-fan-btn').addEventListener('click', async function() {
+            if (selectedFanId && confirm(`Reset all memory for ${selectedFanId}?`)) {
+                try {
+                    const response = await fetch(`/api/reset_fan_memory/${selectedFanId}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        updateStatus(`Memory reset for ${selectedFanId}`);
+                        loadSessionMemory();
+                        document.getElementById('fan-details').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Failed to reset fan memory:', error);
+                }
+            }
+        });
         
         // MAIN GENERATE BUTTON EVENT LISTENER
         document.getElementById('generate-btn').addEventListener('click', async function() {
-            console.log('🚀 Generate Memory Response Button Clicked');
+            console.log('🚀 Generate Smart Response Button Clicked');
             
-            // Get form values
             const fanId = document.getElementById('fan_id').value.trim();
             const creator = document.getElementById('creator').value;
             const fanTypeEl = document.querySelector('input[name="fan_type"]:checked');
@@ -600,17 +968,14 @@
                 alert('Please enter a Fan ID for memory tracking');
                 return;
             }
-            
             if (!creator) {
                 alert('Please select a creator');
                 return;
             }
-            
             if (!fanTypeEl) {
                 alert('Please select fan type');
                 return;
             }
-            
             if (!fanMessage) {
                 alert('Please enter fan message');
                 return;
@@ -618,15 +983,15 @@
             
             // Disable button and show loading
             this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing Memory...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
             
-            // Hide previous response
+            // Reset UI
             document.getElementById('ai-response').style.display = 'none';
             document.getElementById('copy-btn').style.display = 'none';
             document.getElementById('framework-info').style.display = 'none';
-            document.getElementById('returning-fan-alert').style.display = 'none';
+            hideTypeWarning();
             
-            updateStatus('🧠 Analyzing with Session Memory...');
+            updateStatus('🧠 Advanced Fan Type Analysis...');
             
             const requestData = {
                 fan_id: fanId,
@@ -636,14 +1001,12 @@
                 current_phase: currentPhase
             };
             
-            console.log('📡 Sending Memory Request:', requestData);
+            console.log('📡 Sending Advanced Request:', requestData);
             
             try {
                 const response = await fetch('/api/generate_response', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestData)
                 });
                 
@@ -654,26 +1017,31 @@
                 }
                 
                 const data = await response.json();
-                console.log('📊 Memory Response data:', data);
+                console.log('📊 Advanced Response data:', data);
                 
                 if (data.success) {
-                    const memoryEnhanced = data.memory && data.memory.returning_fan;
-                    showResponse(data.response, false, memoryEnhanced);
+                    const detectedType = data.fan_type_analysis.detected_type;
+                    showResponse(data.response, false, detectedType);
+                    
+                    // Update all displays
+                    if (data.fan_type_analysis) {
+                        updateFanTypeAnalysis(data.fan_type_analysis);
+                    }
                     
                     if (data.memory) {
                         updateMemoryDisplay(data.memory);
+                        updatePhaseCompletions(data.memory);
                     }
                     
                     if (data.framework) {
                         showFrameworkInfo(data.framework);
+                        updateConfidenceScore(data.framework.confidence_score, data.analytics.memory_boost);
                     }
                     
-                    updateStatus(`✅ Memory-enhanced response by ${data.creator} - Phase ${data.framework.current_phase}`);
+                    updateStatus(`✅ ${detectedType.toUpperCase()} fan response by ${data.creator} - Phase ${data.framework.current_phase}`);
                     
-                    // Refresh memory viewer after response
-                    setTimeout(() => {
-                        loadSessionMemory();
-                    }, 1000);
+                    // Refresh memory viewer
+                    setTimeout(loadSessionMemory, 1000);
                     
                 } else {
                     showResponse(`Error: ${data.error}`, true);
@@ -687,14 +1055,14 @@
             } finally {
                 // Re-enable button
                 this.disabled = false;
-                this.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Memory Response';
+                this.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Smart Response';
             }
         });
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadSessionMemory();
-            console.log('🎯 FanFocus Session Memory with Viewer loaded successfully');
+            console.log('🎯 Advanced Fan Type Intelligence loaded successfully');
         });
         
         // Prevent form submission
