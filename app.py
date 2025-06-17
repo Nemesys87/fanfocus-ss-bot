@@ -321,7 +321,7 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
-            timeout=25
+            timeout=1000
         )
         
         if response.status_code == 200:
