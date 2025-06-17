@@ -13,7 +13,7 @@ def index():
 
 @app.route('/api/generate_response', methods=['POST'])
 def generate_response():
-    """Generate AI response using Gemini 2.5 Pro with advanced parsing"""
+    """Generate AI response using Gemini 2.5 Pro with 10000 tokens"""
     try:
         data = request.get_json()
         
@@ -111,14 +111,14 @@ Respond as Venessa:
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 1000,
+                "maxOutputTokens": 10000,
                 "temperature": 0.8,
                 "topK": 40,
                 "topP": 0.9
             }
         }
         
-        print("DEBUG - Making API call to Gemini 2.5 Pro...")
+        print("DEBUG - Making API call to Gemini 2.5 Pro with 10000 tokens...")
         
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
@@ -132,9 +132,12 @@ Respond as Venessa:
         if response.status_code == 200:
             result = response.json()
             print(f"DEBUG - API result keys: {list(result.keys())}")
+            print(f"DEBUG - Usage metadata: {result.get('usageMetadata', {})}")
             
             if 'candidates' in result and len(result['candidates']) > 0:
                 candidate = result['candidates'][0]
+                print(f"DEBUG - Candidate keys: {list(candidate.keys())}")
+                print(f"DEBUG - Finish reason: {candidate.get('finishReason', 'Unknown')}")
                 print(f"DEBUG - Full candidate: {candidate}")
                 
                 ai_response = ""
@@ -145,17 +148,17 @@ Respond as Venessa:
                     if 'content' in candidate and 'parts' in candidate['content']:
                         if len(candidate['content']['parts']) > 0:
                             ai_response = candidate['content']['parts'][0].get('text', '').strip()
-                            print(f"DEBUG - Method 1 success: {ai_response[:50]}...")
+                            print(f"DEBUG - Method 1 success: {ai_response[:100]}...")
                     
                     # Method 2: Direct text in content
                     elif 'content' in candidate and 'text' in candidate['content']:
                         ai_response = candidate['content']['text'].strip()
-                        print(f"DEBUG - Method 2 success: {ai_response[:50]}...")
+                        print(f"DEBUG - Method 2 success: {ai_response[:100]}...")
                     
                     # Method 3: Text directly in candidate
                     elif 'text' in candidate:
                         ai_response = candidate['text'].strip()
-                        print(f"DEBUG - Method 3 success: {ai_response[:50]}...")
+                        print(f"DEBUG - Method 3 success: {ai_response[:100]}...")
                     
                     # Method 4: Check if content has other fields
                     elif 'content' in candidate:
@@ -166,39 +169,40 @@ Respond as Venessa:
                         for key, value in content.items():
                             if isinstance(value, str) and len(value) > 10:
                                 ai_response = value.strip()
-                                print(f"DEBUG - Method 4 found text in {key}: {ai_response[:50]}...")
+                                print(f"DEBUG - Method 4 found text in {key}: {ai_response[:100]}...")
                                 break
                             elif isinstance(value, list) and len(value) > 0:
                                 if isinstance(value[0], dict) and 'text' in value[0]:
                                     ai_response = value[0]['text'].strip()
-                                    print(f"DEBUG - Method 4 found text in list: {ai_response[:50]}...")
+                                    print(f"DEBUG - Method 4 found text in list: {ai_response[:100]}...")
                                     break
                     
-                    # Method 5: Force API to return different format
+                    # Method 5: Ultra-simple fallback with massive tokens
                     if not ai_response:
-                        print("DEBUG - No text found, trying alternative API call...")
-                        # Make a simpler API call
-                        simple_payload = {
-                            "contents": [{"parts": [{"text": f"Respond as {creator} to: {fan_message}. Ask for name. 100 chars max."}]}],
-                            "generationConfig": {"maxOutputTokens": 200}
+                        print("DEBUG - No text found, trying ultra-simple fallback...")
+                        # Make the simplest possible API call
+                        ultra_simple_payload = {
+                            "contents": [{"parts": [{"text": f"Say hello as {creator}"}]}],
+                            "generationConfig": {"maxOutputTokens": 5000}
                         }
                         
                         alt_response = requests.post(
                             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
                             headers=headers,
-                            json=simple_payload,
+                            json=ultra_simple_payload,
                             timeout=30
                         )
                         
                         if alt_response.status_code == 200:
                             alt_result = alt_response.json()
-                            print(f"DEBUG - Alt API result: {alt_result}")
+                            print(f"DEBUG - Ultra-simple API usage: {alt_result.get('usageMetadata', {})}")
                             if 'candidates' in alt_result and len(alt_result['candidates']) > 0:
                                 alt_candidate = alt_result['candidates'][0]
+                                print(f"DEBUG - Ultra-simple candidate: {alt_candidate}")
                                 if 'content' in alt_candidate and 'parts' in alt_candidate['content']:
                                     if len(alt_candidate['content']['parts']) > 0:
                                         ai_response = alt_candidate['content']['parts'][0].get('text', '').strip()
-                                        print(f"DEBUG - Alt method success: {ai_response[:50]}...")
+                                        print(f"DEBUG - Ultra-simple method success: {ai_response}")
                     
                     print(f"DEBUG - Final extracted response: {ai_response}")
                     
@@ -216,14 +220,16 @@ Respond as Venessa:
                         'fan_type': fan_type,
                         'kyc_step': 'Phase 0 - Step 1: Name Collection',
                         'framework': 'Saints & Sinners Framework Active',
-                        'ai_model': 'Gemini 2.5 Pro Preview'
+                        'ai_model': 'Gemini 2.5 Pro Preview (10K tokens)',
+                        'usage_metadata': result.get('usageMetadata', {})
                     })
                 else:
                     return jsonify({
                         'success': False,
-                        'error': 'Could not extract text from Gemini 2.5 Pro response',
+                        'error': 'Gemini 2.5 Pro Preview appears to have a fundamental issue with text generation',
                         'debug_candidate': candidate,
-                        'debug_full_result': result
+                        'debug_usage': result.get('usageMetadata', {}),
+                        'recommendation': 'Consider switching to stable model'
                     }), 500
             else:
                 return jsonify({
@@ -250,7 +256,7 @@ Respond as Venessa:
 
 @app.route('/api/test_ai')
 def test_ai():
-    """Test Gemini 2.5 Pro API connection"""
+    """Test Gemini 2.5 Pro API connection with massive token limit"""
     try:
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
         if not api_key:
@@ -258,8 +264,8 @@ def test_ai():
         
         headers = {'Content-Type': 'application/json'}
         payload = {
-            "contents": [{"parts": [{"text": "Say hello as Ella Blair"}]}],
-            "generationConfig": {"maxOutputTokens": 100}
+            "contents": [{"parts": [{"text": "Say hello as Ella Blair in a bubbly way"}]}],
+            "generationConfig": {"maxOutputTokens": 5000}
         }
         
         response = requests.post(
@@ -271,7 +277,7 @@ def test_ai():
         
         return jsonify({
             'status_code': response.status_code,
-            'response_text': response.text[:500],
+            'response_text': response.text[:1000],
             'api_key_present': bool(api_key)
         })
         
