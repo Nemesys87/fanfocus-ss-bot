@@ -673,7 +673,9 @@ def build_advanced_memory_context(fan_context, detected_fan_type, type_validatio
         context_parts.append(f"Topics discussed: {', '.join(conversation_flow['topics_discussed'])}")
     
     if not type_validation['is_consistent']:
-        context_parts.append(f"⚠️ Type warning: {type_validation
+        context_parts.append(f"⚠️ Type warning: {type_validation['warning']}")
+    
+    return " | ".join(context_parts)
 def build_advanced_memory_context(fan_context, detected_fan_type, type_validation):
     """Build comprehensive memory context for AI prompt"""
     if detected_fan_type == 'new':
