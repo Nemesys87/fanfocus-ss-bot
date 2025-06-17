@@ -70,6 +70,7 @@
             min-height: 80px;
             border-left: 4px solid #ffd700;
             word-wrap: break-word;
+            white-space: pre-wrap;
         }
         
         .creator-badge {
@@ -175,6 +176,17 @@
             background-clip: text;
             font-weight: 800;
         }
+
+        .unlimited-badge {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -183,6 +195,7 @@
             <h1 class="display-4">🎯 FanFocusGPT</h1>
             <p class="lead text-muted">Saints & Sinners AI Assistant with Real-Time Streaming</p>
             <small class="text-muted">Powered by Gemini 2.5 Pro & S&S Framework</small>
+            <div class="mt-2"><span class="unlimited-badge">🚀 Unlimited Tokens</span></div>
         </div>
         
         <div class="row">
@@ -230,9 +243,9 @@
                             <div class="form-check">
                                 <input type="checkbox" id="enable_streaming" class="form-check-input" checked>
                                 <label for="enable_streaming" class="form-check-label fw-bold">
-                                    ⚡ Enable Real-Time Streaming
+                                    ⚡ Enable Real-Time Streaming <span class="unlimited-badge ms-2">Unlimited</span>
                                 </label>
-                                <small class="d-block text-muted mt-1">See responses generate in real-time like ChatGPT</small>
+                                <small class="d-block text-muted mt-1">See responses generate in real-time with no token limits</small>
                             </div>
                         </div>
                         
@@ -458,67 +471,3 @@
             responseEl.textContent = text;
             responseEl.style.display = 'block';
         }
-        
-        function appendToResponse(text) {
-            const responseEl = document.getElementById('ai-response');
-            responseEl.textContent = text;
-            responseEl.style.display = 'block';
-        }
-        
-        function showCreatorBadge(creator) {
-            const badge = document.getElementById('creator-badge');
-            const name = document.getElementById('creator-name');
-            name.textContent = getCreatorName(creator);
-            badge.style.display = 'block';
-        }
-        
-        function showFrameworkInfo(step) {
-            const info = document.getElementById('framework-info');
-            const stepEl = document.getElementById('kyc-step');
-            stepEl.textContent = step;
-            info.style.display = 'block';
-        }
-        
-        function showCopyButton() {
-            document.getElementById('copy-btn').style.display = 'block';
-        }
-        
-        function updateStatus(status) {
-            document.getElementById('status-indicator').textContent = status;
-        }
-        
-        function showError(error) {
-            const responseEl = document.getElementById('ai-response');
-            responseEl.innerHTML = `<div style="color: #ffcccb;"><i class="fas fa-exclamation-triangle me-2"></i>${error}</div>`;
-            responseEl.style.display = 'block';
-            updateStatus('Error');
-        }
-        
-        function getCreatorName(creator) {
-            const names = {
-                'ella': 'Ella Blair',
-                'vanp': 'Vanp',
-                'yana': 'Yana Sinner',
-                'venessa': 'Venessa'
-            };
-            return names[creator] || creator;
-        }
-        
-        function copyResponse() {
-            if (finalResponse) {
-                navigator.clipboard.writeText(finalResponse).then(() => {
-                    const btn = document.getElementById('copy-btn');
-                    const originalHTML = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
-                    btn.style.background = 'rgba(40, 167, 69, 0.8)';
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = originalHTML;
-                        btn.style.background = 'rgba(255, 255, 255, 0.25)';
-                    }, 2000);
-                });
-            }
-        }
-    </script>
-</body>
-</html>
