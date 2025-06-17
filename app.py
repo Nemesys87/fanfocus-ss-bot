@@ -674,3 +674,387 @@ def build_advanced_memory_context(fan_context, detected_fan_type, type_validatio
     
     if not type_validation['is_consistent']:
         context_parts.append(f"⚠️ Type warning: {type_validation
+def build_advanced_memory_context(fan_context, detected_fan_type, type_validation):
+    """Build comprehensive memory context for AI prompt"""
+    if detected_fan_type == 'new':
+        return "NEW FAN - First interaction. Focus on warm welcome and basic rapport building."
+    
+    if not fan_context:
+        return "No previous context available."
+    
+    detected_info = fan_context.get('detected_info', {})
+    total_interactions = fan_context.get('total_interactions', 0)
+    conversation_flow = fan_context.get('conversation_flow', {})
+    relationship_stage = determine_relationship_stage(fan_context)
+    
+    context_parts = [
+        f"EXISTING FAN - {total_interactions} previous interactions",
+        f"Relationship stage: {relationship_stage}"
+    ]
+    
+    if detected_info.get('name'):
+        context_parts.append(f"Fan's name: {detected_info['name']}")
+    
+    if detected_info.get('location'):
+        context_parts.append(f"Location: {detected_info['location']}")
+    
+    if detected_info.get('interests'):
+        context_parts.append(f"Interests: {', '.join(detected_info['interests'])}")
+    
+    if detected_info.get('emotional_patterns'):
+        context_parts.append(f"Emotional patterns: {', '.join(detected_info['emotional_patterns'])}")
+    
+    if conversation_flow.get('topics_discussed'):
+        context_parts.append(f"Topics discussed: {', '.join(conversation_flow['topics_discussed'])}")
+    
+    if not type_validation['is_consistent']:
+        context_parts.append(f"⚠️ Type warning: {type_validation['warning']}")
+    
+    return " | ".join(context_parts)
+
+def create_fan_type_aware_ella_prompt(fan_message, current_phase, phase_info, analysis, memory_context, detected_fan_type, type_validation):
+    """Create Ella's fan type-aware prompt"""
+    base_personality = """You are Ella Blair, a bubbly Brazilian OnlyFans creator.
+PERSONALITY: Sweet, caring, submissive, authentic. Always positive and warm.
+COMMUNICATION: Use ☀️💖😊✨ emojis. Light Portuguese phrases (Oi, Obrigada). Enthusiastic!"""
+    
+    # Fan type-specific instructions
+    if detected_fan_type == 'new':
+        fan_type_strategy = """
+NEW FAN APPROACH:
+- This is your first interaction with this fan
+- Be extra welcoming and bubbly
+- Introduce yourself warmly
+- Focus on making a great first impression
+- Ask basic questions to start building rapport
+- Be patient and nurturing in collecting information"""
+        
+        memory_instruction = "NEW FAN - No previous history. Start fresh and build foundation."
+        
+    else:  # existing fan
+        fan_type_strategy = f"""
+EXISTING FAN APPROACH:
+- You have an established relationship with this fan
+- Show personal warmth and familiarity
+- Reference previous conversations naturally
+- Build on existing rapport and connection
+- Be more intimate and personal in your approach
+- Progress the relationship to deeper levels"""
+        
+        memory_instruction = f"MEMORY CONTEXT: {memory_context}"
+    
+    # Type validation warning
+    if not type_validation['is_consistent']:
+        validation_note = f"\n⚠️ NOTE: {type_validation['warning']} - Adjust approach accordingly."
+    else:
+        validation_note = ""
+    
+    phase_strategy = f"""
+SAINTS & SINNERS FRAMEWORK - PHASE {current_phase}:
+Current Objective: {phase_info['objective']}
+Suggested Next Phase: {analysis['suggested_next_phase']}
+Progression Reason: {analysis['memory_context']['phase_progression_reason']}
+Fan Category: {analysis['fan_category']}
+Relationship Stage: {analysis['fan_type_analysis']['relationship_stage']}"""
+    
+    return f"""{base_personality}
+
+{memory_instruction}
+
+{fan_type_strategy}{validation_note}
+
+{phase_strategy}
+
+Fan says: "{fan_message}"
+
+Respond as Ella Blair with appropriate intimacy level based on relationship history and fan type."""
+
+def create_fan_type_aware_vanp_prompt(fan_message, current_phase, phase_info, analysis, memory_context, detected_fan_type, type_validation):
+    """Create Vanp's fan type-aware prompt"""
+    base_personality = """You are Vanp, a dominant, intelligent Brazilian OnlyFans creator.
+PERSONALITY: Confident, tattooed, witty, dominant with bratty streak. 37 looks 25.
+COMMUNICATION: Use 🔥😏💋 emojis. Confident, teasing tone. Commands respect."""
+    
+    if detected_fan_type == 'new':
+        fan_type_strategy = """
+NEW FAN APPROACH:
+- Assert your dominance from the first interaction
+- Make them understand your value and authority
+- Be intriguing and mysterious to hook their interest
+- Set boundaries and expectations early
+- Use your commanding presence to intrigue them"""
+        memory_instruction = "NEW FAN - Establish dominance and create intrigue from the start."
+    else:
+        fan_type_strategy = """
+EXISTING FAN APPROACH:
+- Leverage your established control in the relationship
+- Reference how they've submitted to your charm before
+- Be more demanding and expectant
+- Build on the power dynamic you've created
+- Show selective appreciation for their loyalty"""
+        memory_instruction = f"ESTABLISHED DYNAMIC: {memory_context}"
+    
+    validation_note = f"\n⚠️ {type_validation['warning']}" if not type_validation['is_consistent'] else ""
+    
+    return f"""{base_personality}
+
+{memory_instruction}
+
+{fan_type_strategy}{validation_note}
+
+SAINTS & SINNERS FRAMEWORK - PHASE {current_phase}:
+Objective: {phase_info['objective']}
+Use your dominant intelligence strategically.
+
+Fan says: "{fan_message}"
+
+Respond as Vanp with appropriate dominance level based on relationship history."""
+
+def create_fan_type_aware_yana_prompt(fan_message, current_phase, phase_info, analysis, memory_context, detected_fan_type, type_validation):
+    """Create Yana's fan type-aware prompt"""
+    base_personality = """You are Yana Sinner, an artistic, nerdy OnlyFans creator and lingerie designer.
+PERSONALITY: Creative, intelligent, witty, genuine, reserved. SuicideGirls model.
+COMMUNICATION: Use 🎨🎮✨ emojis. Creative language, gaming/art references."""
+    
+    if detected_fan_type == 'new':
+        fan_type_strategy = """
+NEW FAN APPROACH:
+- Share your artistic and nerdy interests to find common ground
+- Be genuine and slightly reserved initially
+- Connect through creative or intellectual topics
+- Show your unique personality authentically
+- Build connection through shared interests"""
+        memory_instruction = "NEW FAN - Discover shared creative interests and build authentic connection."
+    else:
+        fan_type_strategy = """
+EXISTING FAN APPROACH:
+- Reference your shared creative conversations and interests
+- Build on established intellectual and artistic connections
+- Be more open and personal about your creative process
+- Share deeper insights about your art and interests
+- Develop the creative bond you've established"""
+        memory_instruction = f"CREATIVE CONNECTION: {memory_context}"
+    
+    validation_note = f"\n⚠️ {type_validation['warning']}" if not type_validation['is_consistent'] else ""
+    
+    return f"""{base_personality}
+
+{memory_instruction}
+
+{fan_type_strategy}{validation_note}
+
+SAINTS & SINNERS FRAMEWORK - PHASE {current_phase}:
+Objective: {phase_info['objective']}
+Use your creative intelligence to connect.
+
+Fan says: "{fan_message}"
+
+Respond as Yana Sinner with appropriate creative intimacy based on relationship depth."""
+
+def create_fan_type_aware_venessa_prompt(fan_message, current_phase, phase_info, analysis, memory_context, detected_fan_type, type_validation):
+    """Create Venessa's fan type-aware prompt"""
+    base_personality = """You are Venessa, a vibrant Latina gamer girl OnlyFans creator.
+PERSONALITY: Sweet but spicy, energetic, empathetic, playful submissive. Petite, flexible.
+COMMUNICATION: Use 💃🎮✨ emojis. Spanish touches (Hola, amor, cariño). Bright energy!"""
+    
+    if detected_fan_type == 'new':
+        fan_type_strategy = """
+NEW FAN APPROACH:
+- Welcome them with vibrant Latina warmth
+- Share your gaming and cultural interests enthusiastically
+- Be sweet and approachable while showing your spicy side
+- Connect through gaming or cultural topics
+- Build rapport with your energetic personality"""
+        memory_instruction = "NEW FAN - Connect with Latina warmth and gaming enthusiasm."
+    else:
+        fan_type_strategy = """
+EXISTING FAN APPROACH:
+- Use established cultural and gaming connections
+- Be more personal and affectionate (mi amor, cariño)
+- Reference your shared gaming sessions or cultural exchanges
+- Show deeper appreciation for their continued interest
+- Build on the energetic bond you've created"""
+        memory_instruction = f"CULTURAL CONNECTION: {memory_context}"
+    
+    validation_note = f"\n⚠️ {type_validation['warning']}" if not type_validation['is_consistent'] else ""
+    
+    return f"""{base_personality}
+
+{memory_instruction}
+
+{fan_type_strategy}{validation_note}
+
+SAINTS & SINNERS FRAMEWORK - PHASE {current_phase}:
+Objective: {phase_info['objective']}
+Use your Latina energy and gaming connection strategically.
+
+Fan says: "{fan_message}"
+
+Respond as Venessa with appropriate cultural warmth based on relationship history."""
+
+def get_advanced_recommended_action(analysis, detected_fan_type):
+    """Get advanced recommended action based on fan type and analysis"""
+    if detected_fan_type == 'new':
+        if analysis['confidence_score'] > 70:
+            return "Strong first impression - continue building rapport"
+        elif analysis['fan_category'] == 'big_spender':
+            return "New big spender potential - nurture carefully"
+        elif analysis['emotional_tone'] == 'positive':
+            return "Positive new fan - establish strong foundation"
+        else:
+            return "New fan - focus on welcome and basic information gathering"
+    
+    else:  # existing fan
+        if analysis['upselling_opportunity']:
+            return "Leverage established relationship for upselling"
+        elif analysis['confidence_score'] > 80:
+            return "Strong existing relationship - consider progression to next phase"
+        elif analysis['fan_category'] == 'big_spender':
+            return "Established big spender - focus on retention and premium offers"
+        elif analysis['emotional_tone'] == 'negative':
+            return "Address concerns using relationship history"
+        else:
+            return "Continue building on established connection"
+
+@app.route('/api/get_session_memory')
+def get_session_memory():
+    """Enhanced endpoint to view current session memory with fan type info"""
+    session_id = session.get('session_id', 'default')
+    memory_data = session_memory.get(session_id, {})
+    
+    enhanced_fans = {}
+    for fan_id, data in memory_data.items():
+        enhanced_fans[fan_id] = {
+            'total_interactions': data['total_interactions'],
+            'detected_info': data['detected_info'],
+            'last_interaction': data.get('last_interaction'),
+            'phase_history': data.get('phase_history', []),
+            'fan_type_history': data.get('fan_type_history', []),
+            'relationship_stage': determine_relationship_stage(data),
+            'conversation_flow': data.get('conversation_flow', {}),
+            'interaction_history': data.get('interaction_history', [])
+        }
+    
+    return jsonify({
+        'session_id': session_id,
+        'total_fans': len(memory_data),
+        'fans': enhanced_fans
+    })
+
+@app.route('/api/get_fan_data/<fan_id>')
+def get_fan_data(fan_id):
+    """Enhanced endpoint to get specific fan data with full analysis"""
+    session_id = session.get('session_id', 'default')
+    memory_data = session_memory.get(session_id, {})
+    
+    if fan_id in memory_data:
+        fan_data = memory_data[fan_id]
+        
+        # Add computed analysis
+        enhanced_data = fan_data.copy()
+        enhanced_data['relationship_stage'] = determine_relationship_stage(fan_data)
+        enhanced_data['suggested_phase'] = determine_optimal_phase(fan_data, 0, 'existing' if fan_data['total_interactions'] > 0 else 'new')
+        enhanced_data['completion_status'] = analyze_phase_completions(fan_data)
+        
+        return jsonify({
+            'success': True,
+            'fan_data': enhanced_data
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'Fan not found'
+        })
+
+def analyze_phase_completions(fan_data):
+    """Analyze which phases have been completed for a fan"""
+    detected_info = fan_data.get('detected_info', {})
+    phase_completions = detected_info.get('phase_completions', {})
+    
+    completion_status = {
+        'phase_0': bool(detected_info.get('name')),
+        'phase_1': bool(detected_info.get('location')),
+        'phase_2': bool(detected_info.get('interests')),
+        'phase_3': bool(detected_info.get('emotional_patterns')),
+        'phase_4': phase_completions.get('upselling_interest', False)
+    }
+    
+    return completion_status
+
+@app.route('/api/reset_fan_memory/<fan_id>', methods=['POST'])
+def reset_fan_memory(fan_id):
+    """Reset memory for a specific fan (useful for testing)"""
+    session_id = session.get('session_id', 'default')
+    
+    if session_id in session_memory and fan_id in session_memory[session_id]:
+        del session_memory[session_id][fan_id]
+        print(f"🗑️ Reset memory for fan: {fan_id}")
+        return jsonify({'success': True, 'message': f'Memory reset for {fan_id}'})
+    else:
+        return jsonify({'success': False, 'error': 'Fan not found'})
+
+@app.route('/api/test_ai')
+def test_ai():
+    """Enhanced test API with fan type awareness info"""
+    try:
+        api_key = os.environ.get('GOOGLE_AI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'API key not found'})
+        
+        session_id = session.get('session_id', 'None')
+        memory_stats = session_memory.get(session_id, {})
+        
+        # Calculate enhanced stats
+        total_interactions = sum(fan.get('total_interactions', 0) for fan in memory_stats.values())
+        new_fans = len([fan for fan in memory_stats.values() if fan.get('total_interactions', 0) <= 1])
+        existing_fans = len([fan for fan in memory_stats.values() if fan.get('total_interactions', 0) > 1])
+        
+        return jsonify({
+            'status': 'OK',
+            'api_key_present': bool(api_key),
+            'model': 'gemini-2.5-pro-preview-06-05',
+            'environment': 'Railway Production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Development',
+            'framework': 'Saints & Sinners Multi-Phase + Advanced Fan Type Memory',
+            'features': [
+                'Fan Type Auto-Detection',
+                'Advanced Memory Context',
+                'Phase Progression Intelligence',
+                'Relationship Stage Analysis',
+                'Memory Validation System'
+            ],
+            'phases_available': len(SS_FRAMEWORK_PHASES),
+            'fan_categories': len(FAN_CATEGORIES),
+            'session_memory': {
+                'session_id': session_id,
+                'total_fans': len(memory_stats),
+                'new_fans': new_fans,
+                'existing_fans': existing_fans,
+                'total_interactions': total_interactions
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Endpoint not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Internal server error'}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8080))
+    
+    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production':
+        print("🚀 Saints & Sinners FanFocus - RAILWAY PRODUCTION")
+        print("🎯 Multi-Phase Framework + Advanced Fan Type Memory")
+        print(f"📊 {len(SS_FRAMEWORK_PHASES)} Phases | {len(FAN_CATEGORIES)} Categories")
+        print("🧠 Advanced Session Memory System with Fan Type Intelligence")
+        print("🔍 Auto-Detection: New vs Existing Fans")
+        print("📈 Relationship Stage Analysis")
+        print("✅ Enhanced Analytics & Memory-Based Profiling")
+    else:
+        print("🔧 Development Mode - Advanced Fan Type Memory Testing")
+        app.run(host='0.0.0.0', port=port, debug=True)
