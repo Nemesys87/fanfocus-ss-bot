@@ -117,6 +117,30 @@
             margin-top: 15px;
             font-size: 0.8rem;
             font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .streaming-badge {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .railway-badge {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -127,6 +151,10 @@
                 <h1 class="display-4">🎯 FanFocusGPT</h1>
                 <p class="lead text-muted">Saints & Sinners AI Assistant</p>
                 <small class="text-muted">Powered by Gemini 2.5 Pro & S&S Framework</small>
+                <div class="mt-2">
+                    <span class="streaming-badge">🚀 Railway Optimized</span>
+                    <span class="railway-badge ms-2">⚡ Unlimited Streaming</span>
+                </div>
             </div>
             
             <div class="row">
@@ -172,10 +200,12 @@
                             
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input type="checkbox" id="enable_streaming" class="form-check-input">
+                                    <input type="checkbox" id="enable_streaming" class="form-check-input" checked>
                                     <label for="enable_streaming" class="form-check-label">
                                         ⚡ Enable Real-Time Streaming
+                                        <span class="streaming-badge ms-2">Railway Fixed</span>
                                     </label>
+                                    <small class="d-block text-muted mt-1">Optimized for Railway deployment</small>
                                 </div>
                             </div>
                             
@@ -330,7 +360,7 @@
             }
         }
         
-        // Streaming request handler
+        // Streaming request handler - Railway optimized
         async function handleStreamingRequest(formData) {
             updateStatus('Initializing streaming...');
             
@@ -347,7 +377,22 @@
             if (data.success && data.streaming && data.stream_url) {
                 updateStatus('Connecting to stream...');
                 
+                // Railway-specific EventSource configuration
                 const eventSource = new EventSource(data.stream_url);
+                
+                // Set timeout for Railway
+                const timeout = setTimeout(() => {
+                    debugLog('Stream timeout - closing connection');
+                    eventSource.close();
+                    showResponse('Stream timeout. Railway connection limit reached. Try regular mode.', true);
+                    updateStatus('❌ Stream timeout');
+                }, 30000); // 30 second timeout
+                
+                eventSource.onopen = function(event) {
+                    debugLog('Stream connection opened successfully');
+                    updateStatus('🔗 Stream connected');
+                    clearTimeout(timeout);
+                };
                 
                 eventSource.onmessage = function(event) {
                     try {
@@ -358,51 +403,8 @@
                             showResponse('Stream Error: ' + streamData.error, true);
                             updateStatus('❌ Streaming failed');
                             eventSource.close();
+                            clearTimeout(timeout);
                             return;
                         }
                         
-                        if (streamData.status === 'starting') {
-                            updateStatus('🚀 AI is starting...');
-                        }
-                        
-                        if (streamData.status === 'thinking') {
-                            updateStatus('🤔 AI is thinking...');
-                        }
-                        
-                        if (streamData.status === 'generating') {
-                            updateStatus('✨ Generating response...');
-                            showResponse('');
-                        }
-                        
-                        if (streamData.accumulated) {
-                            const responseDiv = document.getElementById('ai-response');
-                            responseDiv.textContent = streamData.accumulated;
-                            responseDiv.style.display = 'block';
-                        }
-                        
-                        if (streamData.status === 'complete') {
-                            finalResponse = streamData.final_response;
-                            updateStatus('✅ Streaming complete!');
-                            document.getElementById('copy-btn').style.display = 'block';
-                            eventSource.close();
-                        }
-                        
-                    } catch (error) {
-                        debugLog('Stream parsing error: ' + error.message);
-                    }
-                };
-                
-                eventSource.onerror = function(error) {
-                    debugLog('Stream connection error: ' + JSON.stringify(error));
-                    showResponse('Streaming connection failed. Please try regular mode.', true);
-                    updateStatus('❌ Stream connection failed');
-                    eventSource.close();
-                };
-                
-            } else {
-                throw new Error('Failed to initialize streaming: ' + (data.error || 'Unknown error'));
-            }
-        }
-    </script>
-</body>
-</html>
+                        if
