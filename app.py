@@ -7,12 +7,58 @@ import time
 app = Flask(__name__)
 app.secret_key = 'fanfocus-ss-secret-key'
 
-# --- FUNZIONI HELPER PER LA LOGICA DI GEMINI ---
+@app.route('/')
+def index():
+    """Main page"""
+    return render_template('index.html')
 
-def get_prompt_for_creator(creator, fan_message):
-    """Restituisce il prompt specifico per il creator."""
-    creator_prompts = {
-        'ella': f"""You are Ella Blair, a bubbly Brazilian OnlyFans creator.
+@app.route('/api/generate_response', methods=['POST'])
+def generate_response():
+    """Generate AI response - handles both streaming and regular requests"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data received'}), 400
+        
+        creator = data.get('creator', '')
+        fan_type = data.get('fan_type', '')
+        fan_message = data.get('fan_message', '')
+        use_streaming = data.get('streaming', False)
+        
+        if not all([creator, fan_type, fan_message]):
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        if use_streaming:
+            # Return streaming URL for frontend to connect to
+            return jsonify({
+                'success': True,
+                'streaming': True,
+                'stream_url': f'/api/stream/{creator}/{fan_type}/{fan_message}'
+            })
+        
+        # Regular non-streaming response
+        return generate_regular_response(creator, fan_type, fan_message)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+
+@app.route('/api/stream/<creator>/<fan_type>/<path:fan_message>')
+def generate_stream(creator, fan_type, fan_message):
+    """Streaming endpoint using Server-Sent Events"""
+    def stream_generator():
+        try:
+            api_key = os.environ.get('GOOGLE_AI_API_KEY')
+            if not api_key:
+                yield f"data: {json.dumps({'error': 'API key not configured'})}\n\n"
+                return
+            
+            # Send initial status
+            yield f"data: {json.dumps({'status': 'starting', 'creator': creator})}\n\n"
+            
+            # Creator-specific prompts
+            creator_prompts = {
+                'ella': f"""You are Ella Blair, a bubbly Brazilian OnlyFans creator.
 
 PERSONALITY: Sweet, caring, submissive, authentic. Always positive and warm.
 COMMUNICATION: Use ☀️💖😊✨ emojis. Light Portuguese phrases (Oi, Obrigada). Enthusiastic!
@@ -29,7 +75,7 @@ Respond as Ella Blair:
 - Keep under 200 characters
 - Use your signature Brazilian warmth""",
 
-        'vanp': f"""You are Vanp, a dominant, intelligent Brazilian OnlyFans creator.
+                'vanp': f"""You are Vanp, a dominant, intelligent Brazilian OnlyFans creator.
 
 PERSONALITY: Confident, tattooed, witty, dominant with bratty streak. 37 looks 25.
 COMMUNICATION: Use 🔥😏💋 emojis. Confident, teasing tone. Commands respect.
@@ -46,7 +92,7 @@ Respond as Vanp:
 - Keep under 200 characters
 - Maintain your bratty, commanding edge""",
 
-        'yana': f"""You are Yana Sinner, an artistic, nerdy OnlyFans creator and lingerie designer.
+                'yana': f"""You are Yana Sinner, an artistic, nerdy OnlyFans creator and lingerie designer.
 
 PERSONALITY: Creative, intelligent, witty, genuine, reserved. SuicideGirls model.
 COMMUNICATION: Use 🎨🎮✨ emojis. Creative language, gaming/art references.
@@ -63,7 +109,7 @@ Respond as Yana Sinner:
 - Keep under 200 characters
 - Reference your artistic or gaming interests if relevant""",
 
-        'venessa': f"""You are Venessa, a vibrant Latina gamer girl OnlyFans creator.
+                'venessa': f"""You are Venessa, a vibrant Latina gamer girl OnlyFans creator.
 
 PERSONALITY: Sweet but spicy, energetic, empathetic, playful submissive. Petite, flexible.
 COMMUNICATION: Use 💃🎮✨ emojis. Spanish touches (Hola, amor, cariño). Bright energy!
@@ -79,125 +125,152 @@ Respond as Venessa:
 - Use cultural warmth to encourage name sharing
 - Keep under 200 characters
 - Reference gaming or cultural background if relevant"""
-    }
-    return creator_prompts.get(creator, creator_prompts['ella'])
+            }
+            
+            prompt = creator_prompts.get(creator, creator_prompts['ella'])
+            
+            # Send thinking status
+            yield f"data: {json.dumps({'status': 'thinking', 'message': f'{creator.title()} is thinking...'})}\n\n"
+            
+            headers = {'Content-Type': 'application/json'}
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "maxOutputTokens": 10000,
+                    "temperature": 0.8,
+                    "topK": 40,
+                    "topP": 0.9
+                }
+            }
+            
+            # Make API call
+            response = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
+                headers=headers,
+                json=payload,
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if 'candidates' in result and len(result['candidates']) > 0:
+                    candidate = result['candidates'][0]
+                    
+                    if 'content' in candidate and 'parts' in candidate['content']:
+                        if len(candidate['content']['parts']) > 0:
+                            full_response = candidate['content']['parts'][0].get('text', '').strip()
+                            
+                            if full_response:
+                                # Send generating status
+                                yield f"data: {json.dumps({'status': 'generating'})}\n\n"
+                                
+                                # Stream the response character by character
+                                accumulated_text = ""
+                                for i, char in enumerate(full_response):
+                                    accumulated_text += char
+                                    
+                                    # Send updates every few characters for smooth effect
+                                    if i % 3 == 0 or i == len(full_response) - 1:
+                                        yield f"data: {json.dumps({'chunk': char, 'accumulated': accumulated_text})}\n\n"
+                                        time.sleep(0.05)  # Small delay for typing effect
+                                
+                                # Ensure character limit
+                                if len(accumulated_text) > 250:
+                                    accumulated_text = accumulated_text[:247] + "..."
+                                
+                                # Send completion
+                                yield f"data: {json.dumps({'status': 'complete', 'final_response': accumulated_text, 'creator': creator, 'fan_type': fan_type, 'kyc_step': 'Phase 0 - Step 1: Name Collection', 'framework': 'Saints & Sinners Framework Active', 'ai_model': 'Gemini 2.5 Pro (Streaming)'})}\n\n"
+                            else:
+                                yield f"data: {json.dumps({'error': 'Empty response from AI'})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'error': 'Invalid response structure'})}\n\n"
+                else:
+                    yield f"data: {json.dumps({'error': 'No response candidates'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'error': f'API Error {response.status_code}'})}\n\n"
+                
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'Streaming error: {str(e)}'})}\n\n"
+    
+    return Response(stream_generator(), mimetype='text/plain', headers={
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+    })
 
-def stream_generator(creator, fan_type, fan_message):
-    """
-    Generatore che chiama Gemini e produce eventi in formato Server-Sent Events (SSE).
-    """
+def generate_regular_response(creator, fan_type, fan_message):
+    """Regular non-streaming response"""
     try:
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
         if not api_key:
-            error_event = {"error": "API key not configured"}
-            yield f"data: {json.dumps(error_event)}\n\n"
-            return
-
-        prompt = get_prompt_for_creator(creator, fan_message)
+            return jsonify({'success': False, 'error': 'API key not configured'}), 500
         
-        # Invia stato iniziale
-        yield f"data: {json.dumps({'status': 'starting', 'creator': creator})}\n\n"
+        # Simple prompt for regular mode
+        prompt = f"Respond as {creator} to: {fan_message}. Ask for their name. Keep under 200 characters."
         
         headers = {'Content-Type': 'application/json'}
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "maxOutputTokens": 2048,
-                "temperature": 0.8,
-                "topK": 40,
-                "topP": 0.9
-            }
+            "generationConfig": {"maxOutputTokens": 2000}
         }
         
-        # Invia stato di "thinking"
-        yield f"data: {json.dumps({'status': 'thinking', 'message': f'{creator} is thinking...'})}\n\n"
-        
-        # Esegue la chiamata all'API di Google
         response = requests.post(
             f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
-            timeout=60
+            timeout=30
         )
         
-        # Analizza la risposta dell'API
         if response.status_code == 200:
             result = response.json()
-            
-            if 'candidates' in result and result['candidates']:
+            if 'candidates' in result and len(result['candidates']) > 0:
                 candidate = result['candidates'][0]
-                
-                if candidate.get('finishReason') not in ['STOP', 'MAX_TOKENS']:
-                    error_msg = f"API generation stopped for reason: {candidate.get('finishReason')}"
-                    yield f"data: {json.dumps({'error': error_msg})}\n\n"
-                    return
-
-                if 'content' in candidate and 'parts' in candidate['content'] and candidate['content']['parts']:
-                    full_response = candidate['content']['parts'][0].get('text', '').strip()
-                    
-                    if full_response:
-                        yield f"data: {json.dumps({'status': 'generating'})}\n\n"
-                        time.sleep(0.1) # Pausa prima di iniziare a "scrivere"
-
-                        # Invia la risposta carattere per carattere per l'effetto streaming
-                        for char in full_response:
-                            yield f"data: {json.dumps({'chunk': char})}\n\n"
-                            time.sleep(0.03) # Pausa per un effetto realistico
+                if 'content' in candidate and 'parts' in candidate['content']:
+                    if len(candidate['content']['parts']) > 0:
+                        ai_response = candidate['content']['parts'][0].get('text', '').strip()
                         
-                        # Invia il messaggio finale di completamento
-                        yield f"data: {json.dumps({'status': 'complete', 'final_response': full_response})}\n\n"
-                    else:
-                        yield f"data: {json.dumps({'error': 'Empty response from AI'})}\n\n"
-                else:
-                    yield f"data: {json.dumps({'error': 'Invalid response structure from AI'})}\n\n"
-            else:
-                yield f"data: {json.dumps({'error': 'No response candidates from AI', 'details': response.text})}\n\n"
-        else:
-            yield f"data: {json.dumps({'error': f'API Error {response.status_code}', 'details': response.text})}\n\n"
-            
+                        if len(ai_response) > 250:
+                            ai_response = ai_response[:247] + "..."
+                        
+                        return jsonify({
+                            'success': True,
+                            'response': ai_response,
+                            'creator': creator,
+                            'fan_type': fan_type,
+                            'kyc_step': 'Phase 0 - Step 1: Name Collection',
+                            'framework': 'Saints & Sinners Framework Active'
+                        })
+        
+        return jsonify({'success': False, 'error': 'Failed to generate response'}), 500
+        
     except Exception as e:
-        yield f"data: {json.dumps({'error': f'Server stream error: {str(e)}'})}\n\n"
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
-
-# --- ROTTE DELL'APPLICAZIONE FLASK ---
-
-@app.route('/')
-def index():
-    """Pagina principale"""
-    return render_template('index.html')
-
-@app.route('/api/generate_response', methods=['POST'])
-def generate_response_trigger():
-    """
-    Questa rotta riceve la richiesta POST iniziale e serve solo da "trigger".
-    La risposta di questa rotta non viene usata dal frontend, che invece
-    procede a chiamare l'endpoint GET per lo streaming.
-    """
-    return jsonify({'success': True, 'message': 'Stream request acknowledged. Connect to the GET stream endpoint.'})
-
-
-@app.route('/api/stream/<creator>/<fan_type>/<fan_message>', methods=['GET'])
-def handle_stream(creator, fan_type, fan_message):
-    """
-    Questo è l'endpoint che gestisce lo streaming vero e proprio.
-    Viene chiamato dal frontend con una richiesta GET e i parametri nell'URL.
-    """
-    return Response(stream_generator(creator, fan_type, fan_message), mimetype='text/event-stream')
-
-
-# --- GESTIONE ERRORI E AVVIO APPLICAZIONE ---
+@app.route('/api/test_ai')
+def test_ai():
+    """Test Gemini 2.5 Pro API connection"""
+    try:
+        api_key = os.environ.get('GOOGLE_AI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'API key not found'})
+        
+        return jsonify({
+            'status': 'OK',
+            'api_key_present': bool(api_key),
+            'model': 'gemini-2.5-pro-preview-06-05'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({'error': 'Endpoint not found. Check your URL.'}), 404
-
-@app.errorhandler(405)
-def method_not_allowed(error):
-    return jsonify({'error': 'Method Not Allowed'}), 405
+    return jsonify({'error': 'Endpoint not found'}), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    return jsonify({'error': f'Internal server error: {error}'}), 500
+    return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
