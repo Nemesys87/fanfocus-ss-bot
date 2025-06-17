@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FanFocusGPT - Clean Submenu System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .response-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .submenu-show {
+            max-height: 200px;
+            opacity: 1;
+            transition: all 0.3s ease;
+        }
+        .submenu-hide {
+            max-height: 0;
+            opacity: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .btn-generate {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            transition: all 0.3s ease;
+        }
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+        .confidence-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            background: linear-gradient(45deg, #10b981, #059669);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold gradient-bg bg-clip-text text-transparent mb-2">
+                <i class="fas fa-bullseye mr-2"></i>FanFocusGPT
+            </h1>
+            <p class="text-gray-600 text-lg">Saints & Sinners Clean Submenu System</p>
+            <div class="flex justify-center space-x-4 mt-4">
+                <span class="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                    <i class="fas fa-rocket mr-1"></i>Submenu Intelligence
+                </span>
+                <span class="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
+                    <i class="fas fa-tachometer-alt mr-1"></i>Performance Optimized
+                </span>
+                <span class="bg-purple-100 text-purple-800 text-sm px-3 py-1 rounded-full">
+                    <i class="fas fa-users mr-1"></i>Chatter Focused
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Input Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                        <i class="fas fa-cog mr-2 text-blue-600"></i>Setup & Configuration
+                    </h2>
+                    
+                    <!-- Fan ID -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fan ID</label>
+                        <input type="text" id="fan_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="e.g., marco_italy" value="test_fan">
+                    </div>
+
+                    <!-- Creator -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Creator Model</label>
+                        <select id="creator" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select Creator</option>
+                            <option value="ella">🇧🇷 Ella Blair - Brazilian GFE</option>
+                            <option value="vanp">🔥 Vanp - Dominant Bratty</option>
+                            <option value="yana">🎨 Yana Sinner - Artistic Nerdy</option>
+                            <option value="venessa">💃 Venessa - Latina Gamer</option>
+                        </select>
+                    </div>
+
+                    <!-- Situation -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Situation/Goal</label>
+                        <select id="situation" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="toggleSubmenu()">
+                            <option value="">Select Situation</option>
+                            <option value="kyc_collect">🔍 KYC - Collect Info</option>
+                            <option value="mass_message_creation">📱 Mass Message Creation</option>
+                            <option value="building_relationship">💕 Building Relationship</option>
+                            <option value="upselling_conversion">💰 Upselling/Conversion</option>
+                            <option value="sexting_intimate">🔥 Sexting/Intimate</option>
+                            <option value="reengagement">🔄 Re-engagement (Dead fan)</option>
+                            <option value="custom_content">🎁 Custom Content Offer</option>
+                            <option value="general_chat">💬 General Chat</option>
+                            <option value="first_time_buyer">🆕 First Time Buyer</option>
+                            <option value="vip_treatment">👑 VIP Treatment</option>
+                            <option value="complaint_handling">⚠️ Complaint Handling</option>
+                            <option value="birthday_special">🎉 Birthday/Special</option>
+                        </select>
+                    </div>
+
+                    <!-- KYC Submenu -->
+                    <div id="kyc_submenu" class="submenu-hide mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">KYC Specific Info</label>
+                        <select id="kyc_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select Info Type</option>
+                            <option value="name_collection">📝 Name Collection</option>
+                            <option value="location_country">📍 Location & Country</option>
+                            <option value="interests_hobbies">🎯 Interests & Hobbies</option>
+                            <option value="job_age">💼 Job & Age</option>
+                            <option value="spending_capacity">💰 Spending Capacity</option>
+                            <option value="relationship_status">💕 Relationship Status</option>
+                        </select>
+                    </div>
+
+                    <!-- Mass Message Submenu -->
+                    <div id="mass_submenu" class="submenu-hide mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Message Type</label>
+                        <select id="mass_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select Message Type</option>
+                            <option value="morning_greeting">🌅 Morning Greeting</option>
+                            <option value="evening_night">🌙 Evening/Night Message</option>
+                            <option value="special_event">🎉 Special Event/Holiday</option>
+                            <option value="promotional_content">💝 Promotional Content</option>
+                            <option value="reengagement_campaign">🔥 Re-engagement Campaign</option>
+                        </select>
+                    </div>
+
+                    <!-- Fan Message -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fan Message / Request</label>
+                        <textarea id="fan_message" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                  placeholder="Paste fan's message or describe what you need..."></textarea>
+                    </div>
+
+                    <!-- Mass Message Options -->
+                    <div id="mass_options" class="submenu-hide space-y-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Base on Examples (Optional)</label>
+                            <textarea id="mass_examples" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                      placeholder="Paste example messages to base the generation on..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Modify Existing (Optional)</label>
+                            <textarea id="mass_modify" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                      placeholder="Paste existing message to improve/modify..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button type="button" class="btn-generate w-full text-white font-bold py-3 px-6 rounded-lg" id="generate-btn">
+                        <i class="fas fa-magic mr-2"></i>Generate Smart Response
+                    </button>
+                </div>
+
+                <!-- Analytics -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                        <i class="fas fa-chart-line mr-2 text-green-600"></i>Analytics
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-gray-700">Confidence Score</span>
+                                <span id="confidence-text" class="text-sm font-bold text-green-600">0%</span>
+                            </div>
+                            <div class="confidence-bar h-4">
+                                <div class="confidence-fill h-full" id="confidence-fill" style="width: 0%;">0%</div>
+                            </div>
+                        </div>
+
+                        <div id="analytics-details" class="space-y-2 text-sm text-gray-600" style="display: none;">
+                            <div><strong>Situation:</strong> <span id="analytics-situation">-</span></div>
+                            <div><strong>Approach:</strong> <span id="analytics-approach">-</span></div>
+                            <div><strong>Fan Category:</strong> <span id="analytics-category">-</span></div>
+                            <div><strong>Emotional Tone:</strong> <span id="analytics-emotion">-</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Columns: Response -->
+            <div class="lg:col-span-2">
+                <div class="response-card rounded-lg shadow-lg p-6 min-h-96">
+                    <h2 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-robot mr-2"></i>AI Response
+                    </h2>
+                    
+                    <div id="status-display" class="mb-4 text-white/80">
+                        Ready to generate smart response...
+                    </div>
+                    
+                    <div id="ai-response" class="bg-white/10 rounded-lg p-4 min-h-64 text-white whitespace-pre-wrap" style="display: none;">
+                        <!-- Response will appear here -->
+                    </div>
+                    
+                    <button id="copy-btn" class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg mt-4 transition-colors" style="display: none;">
+                        <i class="fas fa-copy mr-2"></i>Copy Response
+                    </button>
+
+                    <!-- Framework Info -->
+                    <div id="framework-info" class="bg-white/10 rounded-lg p-4 mt-4" style="display: none;">
+                        <div class="text-sm">
+                            <div><strong>Task:</strong> <span id="framework-task"></span></div>
+                            <div><strong>Objective:</strong> <span id="framework-objective"></span></div>
+                            <div><strong>Recommended Action:</strong> <span id="framework-action"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let finalResponse = '';
+
+        function toggleSubmenu() {
+            const situation = document.getElementById('situation').value;
+            const kycSubmenu = document.getElementById('kyc_submenu');
+            const massSubmenu = document.getElementById('mass_submenu');
+            const massOptions = document.getElementById('mass_options');
+            
+            // Hide all submenus first
+            kycSubmenu.className = 'submenu-hide mb-4';
+            massSubmenu.className = 'submenu-hide mb-4';
+            massOptions.className = 'submenu-hide space-y-4 mb-4';
+            
+            // Show relevant submenu
+            if (situation === 'kyc_collect') {
+                kycSubmenu.className = 'submenu-show mb-4';
+            } else if (situation === 'mass_message_creation') {
+                massSubmenu.className = 'submenu-show mb-4';
+                massOptions.className = 'submenu-show space-y-4 mb-4';
+            }
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status-display').textContent = message;
+            console.log('📱 Status:', message);
+        }
+
+        function showResponse(text, isError = false) {
+            const responseDiv = document.getElementById('ai-response');
+            responseDiv.textContent = text;
+            responseDiv.style.display = 'block';
+            
+            if (isError) {
+                responseDiv.className = 'bg-red-500/20 rounded-lg p-4 min-h-64 text-white whitespace-pre-wrap';
+                document.getElementById('copy-btn').style.display = 'none';
+            } else {
+                responseDiv.className = 'bg-white/10 rounded-lg p-4 min-h-64 text-white whitespace-pre-wrap';
+                document.getElementById('copy-btn').style.display = 'block';
+                finalResponse = text;
+            }
+        }
+
+        function updateAnalytics(data) {
+            const confidence = data.framework?.confidence_score || 0;
+            const percentage = Math.min(100, Math.max(0, confidence));
+            
+            document.getElementById('confidence-fill').style.width = percentage + '%';
+            document.getElementById('confidence-fill').textContent = percentage + '%';
+            document.getElementById('confidence-text').textContent = percentage + '%';
+            
+            if (data.framework) {
+                document.getElementById('analytics-situation').textContent = data.framework.situation_name || '-';
+                document.getElementById('analytics-approach').textContent = data.framework.approach || '-';
+                document.getElementById('analytics-category').textContent = data.framework.fan_category || '-';
+                document.getElementById('analytics-emotion').textContent = data.framework.emotional_tone || '-';
+                document.getElementById('analytics-details').style.display = 'block';
+            }
+
+            if (data.framework) {
+                document.getElementById('framework-task').textContent = data.framework.submenu_name || data.framework.situation_name || '-';
+                document.getElementById('framework-objective').textContent = data.framework.objective || '-';
+                document.getElementById('framework-action').textContent = data.analytics?.recommended_action || '-';
+                document.getElementById('framework-info').style.display = 'block';
+            }
+        }
+
+        // Copy function
+        document.getElementById('copy-btn').addEventListener('click', function() {
+            if (finalResponse) {
+                navigator.clipboard.writeText(finalResponse).then(() => {
+                    this.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+                    this.className = 'bg-green-500/40 text-white font-medium py-2 px-4 rounded-lg mt-4 transition-colors';
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-copy mr-2"></i>Copy Response';
+                        this.className = 'bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg mt-4 transition-colors';
+                    }, 2000);
+                }).catch(err => {
+                    alert('Copy failed. Select and copy manually.');
+                });
+            }
+        });
+
+        // Main generate button
+        document.getElementById('generate-btn').addEventListener('click', async function() {
+            console.log('🚀 Generate Smart Response Button Clicked');
+            
+            const fanId = document.getElementById('fan_id').value.trim();
+            const creator = document.getElementById('creator').value;
+            const situation = document.getElementById('situation').value;
+            const fanMessage = document.getElementById('fan_message').value.trim();
+            
+            // Get submenu values
+            let submenu = '';
+            if (situation === 'kyc_collect') {
+                submenu = document.getElementById('kyc_type').value;
+            } else if (situation === 'mass_message_creation') {
+                submenu = document.getElementById('mass_type').value;
+            }
+
+            // Get mass message options
+            const examplesText = document.getElementById('mass_examples').value.trim();
+            const modifyText = document.getElementById('mass_modify').value.trim();
+            
+            console.log('📝 Form Values:', { fanId, creator, situation, submenu, fanMessage: fanMessage?.substring(0, 50) });
+            
+            // Validation
+            if (!fanId) {
+                alert('Please enter a Fan ID');
+                return;
+            }
+            if (!creator) {
+                alert('Please select a creator');
+                return;
+            }
+            if (!situation) {
+                alert('Please select a situation');
+                return;
+            }
+            if (situation === 'mass_message_creation' && !submenu) {
+                alert('Please select a message type for mass messages');
+                return;
+            }
+            if (situation !== 'mass_message_creation' && !fanMessage) {
+                alert('Please enter fan message');
+                return;
+            }
+            
+            // Disable button and show loading
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+            
+            // Reset UI
+            document.getElementById('ai-response').style.display = 'none';
+            document.getElementById('copy-btn').style.display = 'none';
+            document.getElementById('framework-info').style.display = 'none';
+            
+            updateStatus('🤖 Generating smart response...');
+            
+            const requestData = {
+                fan_id: fanId,
+                creator: creator,
+                situation: situation,
+                submenu: submenu,
+                fan_message: fanMessage || `Generate a ${submenu} message`,
+                examples_text: examplesText,
+                modify_text: modifyText
+            };
+            
+            console.log('📡 Sending Request:', requestData);
+            
+            try {
+                const response = await fetch('/api/generate_response', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Response data:', data);
+                
+                if (data.success) {
+                    showResponse(data.response);
+                    updateAnalytics(data);
+                    updateStatus(`✅ Response generated by ${data.creator} - ${data.framework?.situation_name || situation}`);
+                } else {
+                    showResponse(`Error: ${data.error}`, true);
+                    updateStatus('❌ Failed to generate response');
+                }
+                
+            } catch (error) {
+                console.error('❌ Request failed:', error);
+                showResponse(`Network Error: ${error.message}`, true);
+                updateStatus('❌ Connection failed');
+            } finally {
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate Smart Response';
+            }
+        });
+
+        // Initialize
+        console.log('🎯 Clean Submenu System loaded successfully');
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"95139c189f733765","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.6.2","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDh8nF23csuPtK74oyeGSQJBPDdUgJLYiZ8g8JMrap4CLT8l2buTcgXfZDnTgqMkzKnSmXOkTnNqobjqOjlq%2F5bIEv4Ktyq0gW7CyxMJvQdQpnhriYPhLYV5uGlLIVBUfmEP4RB0yl089pGi%2BPkg%2FdF7b2RzJux9RlAenCy2KD%2BIBdOPE09DgxmJSJwe7rlDbT%2BtY4xXRbkSbcFetvsonLO4JunoRVjHIMtXQcC4owQiRtFGtiVp5JrZczNVf4le7vK2IJebT8X6c75oMNnkf07uoOnyHYmlAtyHbsc7XOJ8XUWO0d5l76xo19TYPL6hX8MsxItuU3OOFMKvu1Mo3sSvtnC80zYqwTxtnG7Cv77V%2FYnm9pf3owMx60l28gjubafeQhk15lPzmYGFNrEkr6ADi0uZg1aeoVHP5uvR3Y341YrH7bOwQzPbhqwRShoYXhm1qb33PbzBx2vzmEZaPm5sF7Y5jU2g%2BOG%2FvSzMLV%2B8aX0HLGPidu%2FJQDQhey4qH0w%3D%3D";
+        window.__genspark_locale = "it-IT";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDh8nF23csuPtK74oyeGSQJBPDdUgJLYiZ8g8JMrap4CLT8l2buTcgXfZDnTgqMkzKnSmXOkTnNqobjqOjlq/5bIEv4Ktyq0gW7CyxMJvQdQpnhriYPhLYV5uGlLIVBUfmEP4RB0yl089pGi+Pkg/dF7b2RzJux9RlAenCy2KD+IBdOPE09DgxmJSJwe7rlDbT+tY4xXRbkSbcFetvsonLO4JunoRVjHIMtXQcC4owQiRtFGtiVp5JrZczNVf4le7vK2IJebT8X6c75oMNnkf07uoOnyHYmlAtyHbsc7XOJ8XUWO0d5l76xo19TYPL6hX8MsxItuU3OOFMKvu1Mo3sSvtnC80zYqwTxtnG7Cv77V/Ynm9pf3owMx60l28gjubafeQhk15lPzmYGFNrEkr6ADi0uZg1aeoVHP5uvR3Y341YrH7bOwQzPbhqwRShoYXhm1qb33PbzBx2vzmEZaPm5sF7Y5jU2g+OG/vSzMLV+8aX0HLGPidu/JQDQhey4qH0w==";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
