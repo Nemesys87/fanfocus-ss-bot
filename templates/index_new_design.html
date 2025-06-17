@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saints & Sinners FanFocus - Creator Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0A0A0F 0%, #1A1A2E 50%, #16213E 100%);
+            min-height: 100vh;
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .glow-gold {
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+        }
+        
+        .tab-ella {
+            background: linear-gradient(135deg, #A855F7 0%, #F59E0B 100%);
+        }
+        
+        .tab-vanp {
+            background: linear-gradient(135deg, #7C3AED 0%, #FBBF24 100%);
+        }
+        
+        .tab-yana {
+            background: linear-gradient(135deg, #8B5CF6 0%, #D97706 100%);
+        }
+        
+        .tab-venessa {
+            background: linear-gradient(135deg, #6366F1 0%, #F59E0B 100%);
+        }
+        
+        .creator-card {
+            transition: all 0.3s ease;
+        }
+        
+        .creator-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8B5CF6 0%, #F59E0B 100%);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #A855F7 0%, #FBBF24 100%);
+            transform: translateY(-1px);
+        }
+        
+        .response-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #8B5CF6;
+        }
+        
+        .personality-badge {
+            background: linear-gradient(135deg, #8B5CF6 0%, #F59E0B 100%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #8B5CF6;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Header -->
+    <header class="glassmorphism border-b border-purple-500/30 p-4 mb-6">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">
+                    <i class="fas fa-crown mr-2"></i>Saints & Sinners
+                </div>
+                <div class="text-lg font-semibold text-gray-300">FanFocus Creator Dashboard</div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-400">
+                    <i class="fas fa-brain mr-1"></i>AI Enhanced
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4">
+        <!-- Creator Tabs -->
+        <div class="glassmorphism rounded-lg p-6 mb-6">
+            <div class="flex space-x-2 mb-6">
+                <button class="creator-tab tab-ella px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 active" data-creator="ella">
+                    <i class="fas fa-heart mr-2"></i>Ella Blair
+                </button>
+                <button class="creator-tab tab-vanp px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 opacity-70 hover:opacity-100" data-creator="vanp">
+                    <i class="fas fa-fire mr-2"></i>Vanp
+                </button>
+                <button class="creator-tab tab-yana px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 opacity-70 hover:opacity-100" data-creator="yana">
+                    <i class="fas fa-palette mr-2"></i>Yana Sinner
+                </button>
+                <button class="creator-tab tab-venessa px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 opacity-70 hover:opacity-100" data-creator="venessa">
+                    <i class="fas fa-gamepad mr-2"></i>Venessa
+                </button>
+            </div>
+
+            <!-- Creator Content -->
+            <div id="creator-ella" class="tab-content active">
+                <div class="creator-card glassmorphism rounded-lg p-6 mb-6 glow-purple">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-2xl">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-purple-300">Ella Blair</h3>
+                            <p class="text-gray-300">Sweet Brazilian Creator - Bubbly & Caring</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="creator-vanp" class="tab-content">
+                <div class="creator-card glassmorphism rounded-lg p-6 mb-6 glow-purple">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-blue-300">Vanp</h3>
+                            <p class="text-gray-300">Dominant Brazilian Creator - Confident & Tattooed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="creator-yana" class="tab-content">
+                <div class="creator-card glassmorphism rounded-lg p-6 mb-6 glow-purple">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-2xl">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-purple-300">Yana Sinner</h3>
+                            <p class="text-gray-300">Artistic Creator - Nerdy & Creative Designer</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="creator-venessa" class="tab-content">
+                <div class="creator-card glassmorphism rounded-lg p-6 mb-6 glow-purple">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-2xl">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-green-300">Venessa</h3>
+                            <p class="text-gray-300">Latina Gamer Creator - Sweet but Spicy</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column - Form -->
+            <div class="glassmorphism rounded-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">
+                    <i class="fas fa-cog mr-2"></i>Response Generator
+                </h2>
+                
+                <form id="fanfocusForm" class="space-y-4">
+                    <!-- Hidden Creator Field -->
+                    <input type="hidden" id="selectedCreator" name="creator" value="ella">
+                    
+                    <!-- Situation Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-list mr-2"></i>Situation
+                        </label>
+                        <select id="situation" name="situation" class="form-control w-full px-4 py-3 rounded-lg">
+                            <option value="">Select Situation...</option>
+                            <option value="kyc_collect">KYC - Collect Info</option>
+                            <option value="mass_message">Mass Message Creation</option>
+                            <option value="building_relationship">Building Relationship</option>
+                            <option value="upselling_conversion">Upselling/Conversion</option>
+                            <option value="sexting_intimate">Sexting/Intimate</option>
+                            <option value="reengagement">Re-engagement (Dead fan)</option>
+                            <option value="custom_content">Custom Content Offer</option>
+                            <option value="general_chat">General Chat</option>
+                            <option value="first_time_buyer">First Time Buyer</option>
+                            <option value="vip_treatment">VIP Treatment</option>
+                            <option value="complaint_handling">Complaint Handling</option>
+                            <option value="birthday_special">Birthday/Special</option>
+                        </select>
+                    </div>
+
+                    <!-- KYC Submenu -->
+                    <div id="kycSubmenu" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-user-check mr-2"></i>KYC Type
+                        </label>
+                        <select id="kycType" name="kyc_type" class="form-control w-full px-4 py-3 rounded-lg">
+                            <option value="">Select KYC Type...</option>
+                            <option value="name_collection">Name Collection</option>
+                            <option value="location_country">Location & Country</option>
+                            <option value="interests_hobbies">Interests & Hobbies</option>
+                            <option value="job_age">Job & Age</option>
+                            <option value="spending_capacity">Spending Capacity</option>
+                            <option value="relationship_status">Relationship Status</option>
+                        </select>
+                    </div>
+
+                    <!-- Mass Message Submenu -->
+                    <div id="massSubmenu" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-broadcast-tower mr-2"></i>Mass Message Type
+                        </label>
+                        <select id="massType" name="mass_type" class="form-control w-full px-4 py-3 rounded-lg">
+                            <option value="">Select Message Type...</option>
+                            <option value="morning_greeting">Morning Greeting</option>
+                            <option value="evening_night">Evening/Night Message</option>
+                            <option value="special_event">Special Event/Holiday</option>
+                            <option value="promotional_content">Promotional Content</option>
+                            <option value="reengagement_campaign">Re-engagement Campaign</option>
+                        </select>
+                    </div>
+
+                    <!-- Fan Message -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-comment mr-2"></i>Fan Message
+                        </label>
+                        <textarea id="fanMessage" name="fan_message" rows="4" class="form-control w-full px-4 py-3 rounded-lg" placeholder="Enter the fan's message here..."></textarea>
+                    </div>
+
+                    <!-- Mass Message Examples -->
+                    <div id="massExamples" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-lightbulb mr-2"></i>Examples (Optional)
+                        </label>
+                        <textarea id="examples" name="mass_examples" rows="3" class="form-control w-full px-4 py-3 rounded-lg" placeholder="Provide examples of similar messages..."></textarea>
+                    </div>
+
+                    <!-- Mass Message Modifications -->
+                    <div id="massModify" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-edit mr-2"></i>Modifications (Optional)
+                        </label>
+                        <textarea id="modifications" name="mass_modify" rows="3" class="form-control w-full px-4 py-3 rounded-lg" placeholder="How should the message be modified?"></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-primary w-full px-6 py-4 rounded-lg font-semibold text-white transition-all duration-300 hover:shadow-lg">
+                        <i class="fas fa-magic mr-2"></i>Generate Response
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Column - Results -->
+            <div class="space-y-6">
+                <!-- Response Display -->
+                <div class="glassmorphism rounded-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">
+                        <i class="fas fa-reply mr-2"></i>Generated Response
+                    </h3>
+                    <div id="responseArea" class="response-area p-4 rounded-lg min-h-32">
+                        <div class="text-gray-400 text-center py-8">
+                            <i class="fas fa-comment-dots text-4xl mb-4 opacity-50"></i>
+                            <p>Your AI-generated response will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Framework Analysis -->
+                <div class="glassmorphism rounded-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">
+                        <i class="fas fa-chart-line mr-2"></i>Framework Analysis
+                    </h3>
+                    <div id="frameworkArea" class="space-y-3">
+                        <div class="text-gray-400 text-center py-4">
+                            <i class="fas fa-analytics text-3xl mb-2 opacity-50"></i>
+                            <p>Analysis will appear after generating response</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personality Detection -->
+                <div class="glassmorphism rounded-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">
+                        <i class="fas fa-brain mr-2"></i>Personality Detection
+                    </h3>
+                    <div id="personalityArea" class="flex flex-wrap gap-2">
+                        <div class="text-gray-400 text-center py-4 w-full">
+                            <i class="fas fa-user-circle text-3xl mb-2 opacity-50"></i>
+                            <p>Personality analysis will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glassmorphism rounded-lg p-8 text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-xl font-semibold">Generating Response...</p>
+            <p class="text-gray-400 mt-2">AI is analyzing and crafting the perfect response</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentCreator = 'ella';
+        
+        // DOM elements
+        const creatorTabs = document.querySelectorAll('.creator-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const situationSelect = document.getElementById('situation');
+        const kycSubmenu = document.getElementById('kycSubmenu');
+        const massSubmenu = document.getElementById('massSubmenu');
+        const massExamples = document.getElementById('massExamples');
+        const massModify = document.getElementById('massModify');
+        const form = document.getElementById('fanfocusForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const responseArea = document.getElementById('responseArea');
+        const frameworkArea = document.getElementById('frameworkArea');
+        const personalityArea = document.getElementById('personalityArea');
+        const selectedCreatorInput = document.getElementById('selectedCreator');
+
+        // Creator tab switching
+        creatorTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const creator = tab.dataset.creator;
+                switchCreator(creator);
+            });
+        });
+
+        function switchCreator(creator) {
+            currentCreator = creator;
+            selectedCreatorInput.value = creator;
+            
+            // Update tab appearances
+            creatorTabs.forEach(tab => {
+                if (tab.dataset.creator === creator) {
+                    tab.classList.add('active');
+                    tab.classList.remove('opacity-70');
+                } else {
+                    tab.classList.remove('active');
+                    tab.classList.add('opacity-70');
+                }
+            });
+            
+            // Switch tab content
+            tabContents.forEach(content => {
+                if (content.id === `creator-${creator}`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+
+        // Situation change handler
+        situationSelect.addEventListener('change', (e) => {
+            const situation = e.target.value;
+            
+            // Hide all submenus
+            kycSubmenu.classList.add('hidden');
+            massSubmenu.classList.add('hidden');
+            massExamples.classList.add('hidden');
+            massModify.classList.add('hidden');
+            
+            // Show relevant submenu
+            if (situation === 'kyc_collect') {
+                kycSubmenu.classList.remove('hidden');
+            } else if (situation === 'mass_message') {
+                massSubmenu.classList.remove('hidden');
+                massExamples.classList.remove('hidden');
+                massModify.classList.remove('hidden');
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            // Validation
+            if (!data.creator || !data.situation) {
+                alert('Please select a creator and situation');
+                return;
+            }
+            
+            // Show loading
+            loadingOverlay.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/generate_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResponse(result);
+                } else {
+                    displayError(result.error);
+                }
+            } catch (error) {
+                displayError('Network error: ' + error.message);
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        });
+
+        function displayResponse(result) {
+            // Display response
+            responseArea.innerHTML = `
+                <div class="text-white text-lg leading-relaxed">
+                    ${result.response.replace(/\n/g, '<br>')}
+                </div>
+            `;
+            
+            // Display framework analysis
+            const framework = result.framework;
+            frameworkArea.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Situation:</span>
+                        <span class="text-purple-300 font-semibold">${framework.situation_name}</span>
+                    </div>
+                    ${framework.submenu_name ? `
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Submenu:</span>
+                        <span class="text-purple-300 font-semibold">${framework.submenu_name}</span>
+                    </div>
+                    ` : ''}
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Objective:</span>
+                        <span class="text-yellow-300 font-semibold">${framework.objective}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Approach:</span>
+                        <span class="text-blue-300 font-semibold">${framework.approach}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Confidence:</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-purple-500 to-yellow-500" style="width: ${framework.confidence_score}%"></div>
+                            </div>
+                            <span class="text-white font-semibold">${framework.confidence_score}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Display personality detection
+            if (framework.fan_personality && framework.fan_personality !== 'BALANCED') {
+                personalityArea.innerHTML = `
+                    <div class="personality-badge px-3 py-1 rounded-full inline-flex items-center">
+                        <i class="fas fa-user-circle mr-2"></i>
+                        ${framework.fan_personality.replace(/_/g, ' ')}
+                    </div>
+                    <div class="personality-badge px-3 py-1 rounded-full inline-flex items-center">
+                        <i class="fas fa-cogs mr-2"></i>
+                        ${framework.response_style.replace(/_/g, ' ')}
+                    </div>
+                `;
+            } else {
+                personalityArea.innerHTML = `
+                    <div class="text-gray-400 text-center py-4 w-full">
+                        <i class="fas fa-user-circle text-2xl mb-2 opacity-50"></i>
+                        <p>No specific personality detected - Using balanced approach</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayError(error) {
+            responseArea.innerHTML = `
+                <div class="text-red-400 text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                    <p class="text-lg font-semibold">Error</p>
+                    <p class="text-sm mt-2">${error}</p>
+                </div>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            switchCreator('ella');
+        });
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"95145b080ea0ee65","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.6.2","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDv903t9Lw8giozUzHCJ3Z2ixZyzSCYxgl2tZVTcfLK6YdnRpo%2BHscBkcwedMZTtKkVFcGh42Zil1uan1Vc0QkSV3r0EOT5fbZoKsbxA1fPCCDOocZK8RpYzURPscZ7XxWM0JQoD082o6dk6Ju1H%2BWjWrKioY3WRBmBKabZGq46Ukkh%2ByhfvU6hEM59wEI0NmTRq4%2FSpS97Aoh3X%2B8bK0FEM2GDoSEXGf3I%2BfEqfAciCqGRSTcMlyUI191sYenUZEk5TdtxHciqFMmTq6IOm6T7gUEKae8kfxdhUOM%2FsUVFclrujR3BTnLx4Y0%2F1HZ%2BU2UDCJ2d%2BolZ0v02e9d7Jsz%2FsAR%2Bg%2B9GzIhJ1wlTGGXwXQv5qDpJCu4FIsPHVZCi7Iz%2F6qyTiqL9gqCKgV%2FpTlto6GQl6LYG4ABo80fKEtZaSvcdUOS5SofZSUOYMoGW3XsmHDXSLFCzSCpG%2FuTjhLbQTaQQe9VsL71%2F1nNafaUpnU3wKGYZIWCoyE8uQQyHJsjg%3D%3D";
+        window.__genspark_locale = "it-IT";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDv903t9Lw8giozUzHCJ3Z2ixZyzSCYxgl2tZVTcfLK6YdnRpo+HscBkcwedMZTtKkVFcGh42Zil1uan1Vc0QkSV3r0EOT5fbZoKsbxA1fPCCDOocZK8RpYzURPscZ7XxWM0JQoD082o6dk6Ju1H+WjWrKioY3WRBmBKabZGq46Ukkh+yhfvU6hEM59wEI0NmTRq4/SpS97Aoh3X+8bK0FEM2GDoSEXGf3I+fEqfAciCqGRSTcMlyUI191sYenUZEk5TdtxHciqFMmTq6IOm6T7gUEKae8kfxdhUOM/sUVFclrujR3BTnLx4Y0/1HZ+U2UDCJ2d+olZ0v02e9d7Jsz/sAR+g+9GzIhJ1wlTGGXwXQv5qDpJCu4FIsPHVZCi7Iz/6qyTiqL9gqCKgV/pTlto6GQl6LYG4ABo80fKEtZaSvcdUOS5SofZSUOYMoGW3XsmHDXSLFCzSCpG/uTjhLbQTaQQe9VsL71/1nNafaUpnU3wKGYZIWCoyE8uQQyHJsjg==";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
