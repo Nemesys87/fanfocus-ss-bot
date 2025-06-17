@@ -82,6 +82,8 @@ def index():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
         print(f"🆕 New session created: {session['session_id']}")
+        # Initialize empty memory for this session
+        session_memory[session['session_id']] = {}
     
     return render_template('index.html')
 
@@ -99,15 +101,19 @@ def generate_response():
         fan_type = data.get('fan_type', '')
         fan_message = data.get('fan_message', '')
         current_phase = data.get('current_phase', 0)
-        fan_id = data.get('fan_id', 'default_fan')  # New: Fan ID for memory
+        fan_id = data.get('fan_id', 'default_fan')
         
         print(f"✅ Session Memory Request - Creator: {creator}, Phase: {current_phase}, Fan: {fan_id}")
         
-        if not all([creator, fan_type, fan_message]):
-            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        if not all([creator, fan_type, fan_message, fan_id]):
+            return jsonify({'success': False, 'error': 'Missing required fields (including fan_id)'}), 400
+        
+        # Get current session ID
+        session_id = session.get('session_id', 'default')
+        print(f"🔍 Session ID: {session_id}")
         
         # Update session memory with new interaction
-        update_session_memory(fan_id, {
+        update_session_memory(session_id, fan_id, {
             'message': fan_message,
             'timestamp': datetime.now().isoformat(),
             'creator': creator,
@@ -115,7 +121,8 @@ def generate_response():
         })
         
         # Get fan context from memory
-        fan_context = get_fan_context(fan_id)
+        fan_context = get_fan_context(session_id, fan_id)
+        print(f"🧠 Fan context retrieved: {fan_context.get('total_interactions', 0)} interactions")
         
         # Analyze fan message with memory context
         analysis = analyze_fan_message_with_memory(fan_message, current_phase, fan_context)
@@ -127,13 +134,16 @@ def generate_response():
         print(f"❌ Error in generate_response: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
-def update_session_memory(fan_id, interaction_data):
+def update_session_memory(session_id, fan_id, interaction_data):
     """Update session memory with new fan interaction"""
-    session_id = session.get('session_id', 'default')
+    print(f"🧠 Updating memory for session {session_id}, fan {fan_id}")
     
+    # Ensure session exists
     if session_id not in session_memory:
         session_memory[session_id] = {}
+        print(f"🆕 Created new session memory for {session_id}")
     
+    # Ensure fan exists in session
     if fan_id not in session_memory[session_id]:
         session_memory[session_id][fan_id] = {
             'fan_id': fan_id,
@@ -150,16 +160,22 @@ def update_session_memory(fan_id, interaction_data):
             'category_scores': {},
             'interaction_history': []
         }
+        print(f"🆕 Created new fan profile for {fan_id}")
     
     fan_data = session_memory[session_id][fan_id]
     fan_data['total_interactions'] += 1
     fan_data['last_interaction'] = datetime.now().isoformat()
     fan_data['interaction_history'].append(interaction_data)
     
+    # Update phase history
+    current_phase = interaction_data['phase']
+    if len(fan_data['phase_history']) == 0 or fan_data['phase_history'][-1] != current_phase:
+        fan_data['phase_history'].append(current_phase)
+    
     # Extract and store information from message
     extract_fan_info(fan_data, interaction_data['message'])
     
-    print(f"🧠 Memory updated for {fan_id}: {fan_data['total_interactions']} interactions")
+    print(f"✅ Memory updated for {fan_id}: {fan_data['total_interactions']} total interactions")
     
 def extract_fan_info(fan_data, message):
     """Extract and store fan information from message"""
@@ -201,21 +217,24 @@ def extract_fan_info(fan_data, message):
             fan_data['detected_info']['interests'].append(interest)
             print(f"🎯 Detected interest: {interest}")
 
-def get_fan_context(fan_id):
+def get_fan_context(session_id, fan_id):
     """Retrieve fan context from session memory"""
-    session_id = session.get('session_id', 'default')
+    print(f"🔍 Looking for fan {fan_id} in session {session_id}")
     
     if session_id in session_memory and fan_id in session_memory[session_id]:
         context = session_memory[session_id][fan_id]
-        print(f"🧠 Retrieved context for {fan_id}: {context['total_interactions']} interactions")
+        print(f"✅ Found existing fan context: {context['total_interactions']} interactions")
         return context
     
-    print(f"🆕 No context found for {fan_id} - new fan")
+    print(f"🆕 No context found for {fan_id} - truly new fan")
     return {}
 
 def analyze_fan_message_with_memory(message, current_phase, fan_context):
     """Enhanced analysis with memory context"""
     message_lower = message.lower()
+    
+    # Check if this is actually a returning fan
+    is_returning_fan = len(fan_context) > 0 and fan_context.get('total_interactions', 0) > 0
     
     analysis = {
         'current_phase': current_phase,
@@ -227,19 +246,27 @@ def analyze_fan_message_with_memory(message, current_phase, fan_context):
         'emotional_tone': 'neutral',
         'urgency_level': 'low',
         'memory_context': {
-            'returning_fan': len(fan_context) > 0,
+            'returning_fan': is_returning_fan,
             'total_interactions': fan_context.get('total_interactions', 0),
             'known_info': fan_context.get('detected_info', {})
         }
     }
     
+    # Base confidence score
+    analysis['confidence_score'] = 20
+    
     # Boost confidence if we have memory context
-    if fan_context:
-        analysis['confidence_score'] += 20
+    if is_returning_fan:
+        analysis['confidence_score'] += 25
+        print(f"🔄 Returning fan boost: +25 confidence")
+        
         if fan_context.get('detected_info', {}).get('name'):
             analysis['confidence_score'] += 15
+            print(f"📝 Name known boost: +15 confidence")
+            
         if fan_context.get('detected_info', {}).get('location'):
             analysis['confidence_score'] += 10
+            print(f"📍 Location known boost: +10 confidence")
     
     # Check for phase progression indicators
     current_phase_info = SS_FRAMEWORK_PHASES.get(current_phase, SS_FRAMEWORK_PHASES[0])
@@ -247,10 +274,13 @@ def analyze_fan_message_with_memory(message, current_phase, fan_context):
     for indicator in current_phase_info['success_indicators']:
         if indicator in message_lower:
             analysis['key_indicators'].append(indicator)
-            analysis['confidence_score'] += 20
-            # Suggest phase progression if enough indicators found
-            if len(analysis['key_indicators']) >= 1:  # Reduced threshold for memory-enhanced
-                analysis['suggested_next_phase'] = current_phase_info['next_phase']
+            analysis['confidence_score'] += 15
+            print(f"🎯 Found indicator: {indicator} (+15 confidence)")
+    
+    # Suggest phase progression if enough indicators found
+    if len(analysis['key_indicators']) >= 1:
+        analysis['suggested_next_phase'] = current_phase_info['next_phase']
+        print(f"⬆️ Phase progression suggested: {current_phase} → {analysis['suggested_next_phase']}")
     
     # Enhanced fan category analysis with memory
     category_scores = fan_context.get('category_scores', {})
@@ -260,11 +290,12 @@ def analyze_fan_message_with_memory(message, current_phase, fan_context):
         for indicator in info['indicators']:
             if indicator in message_lower:
                 score += 1
+                print(f"🏷️ Category {category} indicator found: {indicator}")
         category_scores[category] = score
     
     if category_scores:
         analysis['fan_category'] = max(category_scores, key=category_scores.get)
-        analysis['confidence_score'] += category_scores[analysis['fan_category']] * 10
+        analysis['confidence_score'] += category_scores[analysis['fan_category']] * 5
     
     # Emotional tone analysis
     positive_words = ['love', 'amazing', 'beautiful', 'perfect', 'incredible', 'awesome']
@@ -279,13 +310,13 @@ def analyze_fan_message_with_memory(message, current_phase, fan_context):
     if any(word in message_lower for word in urgent_words):
         analysis['urgency_level'] = 'high'
     
-    # Upselling opportunity detection (enhanced with memory)
+    # Upselling opportunity detection
     upsell_triggers = ['more', 'extra', 'special', 'exclusive', 'private', 'custom', 'personal']
     if any(trigger in message_lower for trigger in upsell_triggers):
         analysis['upselling_opportunity'] = True
         analysis['confidence_score'] += 15
     
-    print(f"📊 Memory-Enhanced Analysis: {analysis}")
+    print(f"📊 Final Analysis: {analysis}")
     return analysis
 
 def generate_memory_enhanced_response(creator, fan_type, fan_message, current_phase, analysis, fan_context):
@@ -375,7 +406,7 @@ def generate_memory_enhanced_response(creator, fan_type, fan_message, current_ph
                                 'category_detected': fan_category != 'unknown',
                                 'engagement_score': min(100, analysis['confidence_score']),
                                 'recommended_action': get_recommended_action(analysis),
-                                'memory_boost': len(fan_context) > 0
+                                'memory_boost': analysis['memory_context']['returning_fan']
                             }
                         })
         
@@ -387,7 +418,7 @@ def generate_memory_enhanced_response(creator, fan_type, fan_message, current_ph
 
 def build_memory_context(fan_context):
     """Build memory context string for AI prompt"""
-    if not fan_context:
+    if not fan_context or fan_context.get('total_interactions', 0) == 0:
         return "First-time interaction with this fan."
     
     detected_info = fan_context.get('detected_info', {})
@@ -425,34 +456,11 @@ Fan Category: {analysis['fan_category']}
 Emotional Tone: {analysis['emotional_tone']}
 """
     
-    if current_phase == 0:
-        specific_strategy = """
-Focus: Collect fan's NAME naturally and warmly
-- If returning fan, show you remember them warmly
-- If new fan, ask for their name in sweet way
-- Use your Brazilian warmth to build rapport"""
-    
-    elif current_phase == 1:
-        specific_strategy = """
-Focus: Learn about their LOCATION and BASIC INFO
-- If you know their name, use it lovingly
-- Ask where they're from with genuine curiosity
-- Share something relatable about yourself"""
-    
-    else:
-        specific_strategy = f"""
-Focus: Continue building connection using known information
-- Reference their known interests/preferences naturally
-- Progress toward phase objective while showing memory
-- Make them feel special and remembered"""
-    
     return f"""{base_personality}
 
 {memory_instruction}
 
 {phase_strategy}
-
-{specific_strategy}
 
 Fan says: "{fan_message}"
 
@@ -467,15 +475,13 @@ COMMUNICATION: Use 🔥😏💋 emojis. Confident, teasing tone. Commands respec
 MEMORY CONTEXT: {memory_context}
 - Use remembered information to show your intelligence and attention
 - Reference past conversations to demonstrate your control
-- Make them feel both remembered and challenged
 
 SAINTS & SINNERS FRAMEWORK - PHASE {current_phase}:
 Objective: {phase_info['objective']}
-Dominant Strategy: Use memory and commanding presence strategically
 
 Fan says: "{fan_message}"
 
-Respond as Vanp with confident dominance, incorporating any remembered details to show your superior attention and control."""
+Respond as Vanp with confident dominance, incorporating any remembered details."""
 
 def create_memory_yana_prompt(fan_message, current_phase, phase_info, analysis, memory_context):
     """Create Yana's memory-enhanced prompt"""
@@ -485,12 +491,9 @@ COMMUNICATION: Use 🎨🎮✨ emojis. Creative language, gaming/art references.
 
 MEMORY CONTEXT: {memory_context}
 - Reference shared interests and past creative conversations
-- Build on previous artistic/gaming connections
-- Show genuine interest in their evolving preferences
 
 SAINTS & SINNERS FRAMEWORK - PHASE {current_phase}:
 Objective: {phase_info['objective']}
-Creative Approach: Use memory to deepen artistic and personal connection
 
 Fan says: "{fan_message}"
 
@@ -504,19 +507,16 @@ COMMUNICATION: Use 💃🎮✨ emojis. Spanish touches (Hola, amor, cariño). Br
 
 MEMORY CONTEXT: {memory_context}
 - Use remembered details with warm Latina affection
-- Reference gaming/cultural connections from past chats
-- Show you care by remembering personal details
 
 SAINTS & SINNERS FRAMEWORK - PHASE {current_phase}:
 Objective: {phase_info['objective']}
-Latina Energy: Combine cultural warmth with gaming connection and memory
 
 Fan says: "{fan_message}"
 
 Respond as Venessa with energetic Latina charm, naturally incorporating remembered context."""
 
 def get_recommended_action(analysis):
-    """Get recommended action based on analysis (enhanced with memory)"""
+    """Get recommended action based on analysis"""
     if analysis['memory_context']['returning_fan']:
         if analysis['upselling_opportunity']:
             return "Leverage relationship history for upselling"
@@ -545,9 +545,28 @@ def get_session_memory():
         'fans': {fan_id: {
             'total_interactions': data['total_interactions'],
             'detected_info': data['detected_info'],
-            'last_interaction': data.get('last_interaction')
+            'last_interaction': data.get('last_interaction'),
+            'phase_history': data.get('phase_history', []),
+            'interaction_history': data.get('interaction_history', [])
         } for fan_id, data in memory_data.items()}
     })
+
+@app.route('/api/get_fan_data/<fan_id>')
+def get_fan_data(fan_id):
+    """Get specific fan data"""
+    session_id = session.get('session_id', 'default')
+    memory_data = session_memory.get(session_id, {})
+    
+    if fan_id in memory_data:
+        return jsonify({
+            'success': True,
+            'fan_data': memory_data[fan_id]
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'Fan not found'
+        })
 
 @app.route('/api/test_ai')
 def test_ai():
@@ -593,7 +612,8 @@ if __name__ == '__main__':
         print("🚀 Saints & Sinners FanFocus - RAILWAY PRODUCTION")
         print("🎯 Multi-Phase Framework + Session Memory Active")
         print(f"📊 {len(SS_FRAMEWORK_PHASES)} Phases | {len(FAN_CATEGORIES)} Categories")
-        print("🧠 Session Memory System Enabled")
+        print("🧠 Session Memory System Enabled (Fixed)")
+        print("📋 Memory Viewer Endpoints Active")
         print("✅ Enhanced Analytics & Memory-Based Profiling")
     else:
         print("🔧 Development Mode - Session Memory Testing")
