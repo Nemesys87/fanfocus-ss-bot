@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FanFocusGPT - Saints & Sinners Multi-Phase + Memory</title>
+    <title>FanFocusGPT - Saints & Sinners Multi-Phase + Memory Viewer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -24,7 +24,7 @@
             border-radius: 20px;
             padding: 40px;
             margin: 20px auto;
-            max-width: 1400px;
+            max-width: 1600px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         
@@ -64,12 +64,57 @@
             color: white;
         }
 
+        .memory-viewer-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            color: white;
+        }
+
         .memory-card {
             background: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
             backdrop-filter: blur(10px);
+        }
+
+        .fan-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid var(--memory-glow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .fan-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .fan-card.selected {
+            background: rgba(255, 255, 255, 0.25);
+            border-left-color: #ffd700;
+        }
+
+        .conversation-history {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .conversation-message {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 0.9rem;
         }
 
         .memory-indicator {
@@ -90,6 +135,22 @@
             font-size: 1.1rem;
             width: 100%;
             color: white;
+        }
+
+        .btn-memory-action {
+            background: var(--memory-glow);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin: 2px;
+            cursor: pointer;
+        }
+
+        .btn-memory-action:hover {
+            background: #00cc88;
         }
         
         .btn-generate:disabled {
@@ -147,6 +208,57 @@
             font-size: 0.7rem;
             font-weight: bold;
         }
+
+        .phase-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin: 2px;
+        }
+
+        .phase-0 { background: #17a2b8; color: white; }
+        .phase-1 { background: #ffc107; color: black; }
+        .phase-2 { background: #fd7e14; color: white; }
+        .phase-3 { background: #6f42c1; color: white; }
+        .phase-4 { background: #28a745; color: white; }
+
+        .tab-content {
+            margin-top: 20px;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--ss-primary);
+            border: none;
+            background: rgba(102, 126, 234, 0.1);
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--ss-primary);
+            color: white;
+        }
+
+        .stats-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 5px 0;
+            text-align: center;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--memory-glow);
+        }
+
+        .stats-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -154,24 +266,29 @@
         <div class="main-container">
             <div class="header-section">
                 <h1 class="display-4">🎯 FanFocusGPT</h1>
-                <p class="lead text-muted">Saints & Sinners Multi-Phase Framework + Session Memory</p>
+                <p class="lead text-muted">Saints & Sinners Multi-Phase Framework + Memory Viewer</p>
                 <div class="mt-2">
                     <span class="framework-badge">🚀 Multi-Phase Active</span>
-                    <span class="memory-indicator ms-2">🧠 Memory Enabled</span>
+                    <span class="memory-indicator ms-2">🧠 Memory Viewer</span>
                 </div>
             </div>
             
             <div class="row">
-                <!-- Left Column -->
+                <!-- Left Column: Input & Controls -->
                 <div class="col-lg-4">
                     <div class="form-section">
                         <h4 class="mb-4"><i class="fas fa-user-circle me-2"></i>Creator & Fan Setup</h4>
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold">Fan ID <span class="memory-indicator">Memory</span></label>
-                            <input type="text" class="form-control fan-id-input" id="fan_id" 
-                                placeholder="e.g., marco_italy, sarah_gamer..." 
-                                value="marco_italy">
+                            <div class="input-group">
+                                <input type="text" class="form-control fan-id-input" id="fan_id" 
+                                    placeholder="e.g., marco_italy, sarah_gamer..." 
+                                    value="marco_italy">
+                                <button class="btn btn-memory-action" id="load-fan-btn" type="button">
+                                    <i class="fas fa-search"></i> Load
+                                </button>
+                            </div>
                             <small class="text-muted">Unique identifier for memory tracking</small>
                         </div>
 
@@ -226,9 +343,9 @@
                         </button>
                     </div>
 
-                    <!-- Memory Section -->
+                    <!-- Current Fan Memory -->
                     <div class="memory-section">
-                        <h5><i class="fas fa-brain me-2"></i>Session Memory</h5>
+                        <h5><i class="fas fa-brain me-2"></i>Current Fan Memory</h5>
                         
                         <div id="memory-status" class="memory-card">
                             <div id="interaction-counter" style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 20px; display: inline-block; font-weight: bold;">
@@ -241,12 +358,13 @@
                             <div id="known-name"><strong>Name:</strong> <span class="text-muted">Unknown</span></div>
                             <div id="known-location"><strong>Location:</strong> <span class="text-muted">Unknown</span></div>
                             <div id="known-interests"><strong>Interests:</strong> <span class="text-muted">None detected</span></div>
+                            <div id="known-phases"><strong>Phase History:</strong> <span class="text-muted">None</span></div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Middle Column -->
-                <div class="col-lg-8">
+                <!-- Middle Column: AI Response -->
+                <div class="col-lg-5">
                     <div class="response-section">
                         <h4><i class="fas fa-robot me-2"></i>AI Response</h4>
                         
@@ -276,12 +394,84 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Right Column: Memory Viewer -->
+                <div class="col-lg-3">
+                    <div class="memory-viewer-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-database me-2"></i>Memory Viewer</h5>
+                            <button class="btn btn-memory-action" id="refresh-memory-btn">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+
+                        <!-- Tabs for different views -->
+                        <ul class="nav nav-tabs" id="memoryTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="fans-tab" data-bs-toggle="tab" data-bs-target="#fans-pane" type="button">
+                                    <i class="fas fa-users"></i> Fans
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats-pane" type="button">
+                                    <i class="fas fa-chart-bar"></i> Stats
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="memoryTabContent">
+                            <!-- Fans List Tab -->
+                            <div class="tab-pane fade show active" id="fans-pane" role="tabpanel">
+                                <div id="fans-list" style="max-height: 400px; overflow-y: auto;">
+                                    <div class="text-center text-muted p-3">
+                                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                        No fans in memory yet
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stats Tab -->
+                            <div class="tab-pane fade" id="stats-pane" role="tabpanel">
+                                <div id="memory-stats">
+                                    <div class="stats-card">
+                                        <div class="stats-number" id="total-fans">0</div>
+                                        <div class="stats-label">Total Fans</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-number" id="total-interactions">0</div>
+                                        <div class="stats-label">Total Interactions</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-number" id="avg-interactions">0</div>
+                                        <div class="stats-label">Avg per Fan</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Fan Details -->
+                    <div class="analytics-section" id="fan-details" style="display: none;">
+                        <h5><i class="fas fa-user-cog me-2"></i>Fan Details</h5>
+                        <div id="selected-fan-info">
+                            <!-- Will be populated when fan is selected -->
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-memory-action w-100" id="resume-conversation-btn">
+                                <i class="fas fa-play"></i> Resume Conversation
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let finalResponse = '';
+        let sessionMemoryData = {};
+        let selectedFanId = null;
         
         // Update status function
         function updateStatus(message) {
@@ -309,7 +499,7 @@
             }
         }
 
-        // Update memory display
+        // Update memory display for current fan
         function updateMemoryDisplay(memoryData) {
             const interactionCounter = document.getElementById('interaction-counter');
             const knownInfo = document.getElementById('known-info');
@@ -341,6 +531,7 @@
             const knownName = document.getElementById('known-name');
             const knownLocation = document.getElementById('known-location');
             const knownInterests = document.getElementById('known-interests');
+            const knownPhases = document.getElementById('known-phases');
             
             // Update name
             if (memoryData.known_name) {
@@ -367,142 +558,180 @@
             }
         }
 
+        // Load and display session memory
+        async function loadSessionMemory() {
+            try {
+                const response = await fetch('/api/get_session_memory');
+                const data = await response.json();
+                
+                sessionMemoryData = data;
+                updateMemoryViewer(data);
+                updateMemoryStats(data);
+                
+                console.log('📊 Session memory loaded:', data);
+            } catch (error) {
+                console.error('❌ Failed to load session memory:', error);
+            }
+        }
+
+        function updateMemoryViewer(data) {
+            const fansList = document.getElementById('fans-list');
+            
+            if (data.total_fans === 0) {
+                fansList.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        No fans in memory yet
+                    </div>
+                `;
+                return;
+            }
+
+            let fansHTML = '';
+            for (const [fanId, fanData] of Object.entries(data.fans)) {
+                const phaseHistory = fanData.phase_history || [0];
+                const currentPhase = phaseHistory[phaseHistory.length - 1];
+                const detectedInfo = fanData.detected_info || {};
+                
+                fansHTML += `
+                    <div class="fan-card" data-fan-id="${fanId}" onclick="selectFan('${fanId}')">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>${detectedInfo.name || fanId}</strong>
+                            <span class="phase-indicator phase-${currentPhase}">Phase ${currentPhase}</span>
+                        </div>
+                        <small class="text-muted">
+                            ${fanData.total_interactions} interactions
+                            ${detectedInfo.location ? '• ' + detectedInfo.location : ''}
+                        </small>
+                        <div class="mt-1">
+                            <small>${new Date(fanData.last_interaction).toLocaleString()}</small>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            fansList.innerHTML = fansHTML;
+        }
+
+        function updateMemoryStats(data) {
+            document.getElementById('total-fans').textContent = data.total_fans;
+            
+            const totalInteractions = Object.values(data.fans).reduce((sum, fan) => sum + fan.total_interactions, 0);
+            document.getElementById('total-interactions').textContent = totalInteractions;
+            
+            const avgInteractions = data.total_fans > 0 ? Math.round(totalInteractions / data.total_fans) : 0;
+            document.getElementById('avg-interactions').textContent = avgInteractions;
+        }
+
+        // Select a fan from the viewer
+        async function selectFan(fanId) {
+            selectedFanId = fanId;
+            
+            // Highlight selected fan
+            document.querySelectorAll('.fan-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-fan-id="${fanId}"]`).classList.add('selected');
+            
+            // Load detailed fan data
+            try {
+                const response = await fetch(`/api/get_fan_data/${fanId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    showFanDetails(data.fan_data);
+                }
+            } catch (error) {
+                console.error('❌ Failed to load fan details:', error);
+            }
+        }
+
+        function showFanDetails(fanData) {
+            const detailsContainer = document.getElementById('selected-fan-info');
+            const fanDetailsSection = document.getElementById('fan-details');
+            
+            const detectedInfo = fanData.detected_info || {};
+            const phaseHistory = fanData.phase_history || [0];
+            const interactionHistory = fanData.interaction_history || [];
+            
+            let detailsHTML = `
+                <div class="mb-3">
+                    <strong>Fan ID:</strong> ${fanData.fan_id}<br>
+                    <strong>Total Interactions:</strong> ${fanData.total_interactions}<br>
+                    <strong>First Seen:</strong> ${new Date(fanData.first_interaction).toLocaleString()}<br>
+                    <strong>Last Seen:</strong> ${new Date(fanData.last_interaction).toLocaleString()}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Detected Information:</strong><br>
+                    <small>
+                        Name: ${detectedInfo.name || 'Unknown'}<br>
+                        Location: ${detectedInfo.location || 'Unknown'}<br>
+                        Interests: ${detectedInfo.interests?.join(', ') || 'None'}
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Phase History:</strong><br>
+                    ${phaseHistory.map(phase => `<span class="phase-indicator phase-${phase}">Phase ${phase}</span>`).join(' ')}
+                </div>
+            `;
+
+            if (interactionHistory.length > 0) {
+                detailsHTML += `
+                    <div class="mb-3">
+                        <strong>Recent Conversations:</strong>
+                        <div class="conversation-history">
+                `;
+
+                // Show last 5 interactions
+                const recentInteractions = interactionHistory.slice(-5);
+                recentInteractions.forEach(interaction => {
+                    detailsHTML += `
+                        <div class="conversation-message">
+                            <small class="text-muted">${new Date(interaction.timestamp).toLocaleTimeString()}</small><br>
+                            "${interaction.message}"
+                        </div>
+                    `;
+                });
+
+                detailsHTML += '</div></div>';
+            }
+
+            detailsContainer.innerHTML = detailsHTML;
+            fanDetailsSection.style.display = 'block';
+        }
+
+        // Resume conversation with selected fan
+        function resumeConversation() {
+            if (!selectedFanId) {
+                alert('Please select a fan first');
+                return;
+            }
+
+            // Auto-fill the form with selected fan data
+            document.getElementById('fan_id').value = selectedFanId;
+            
+            // Get fan data from memory
+            const fanData = sessionMemoryData.fans[selectedFanId];
+            if (fanData) {
+                const phaseHistory = fanData.phase_history || [0];
+                const currentPhase = phaseHistory[phaseHistory.length - 1];
+                document.getElementById('current_phase').value = currentPhase;
+                
+                // Set fan type based on interaction count
+                if (fanData.total_interactions > 1) {
+                    document.getElementById('existing').checked = true;
+                } else {
+                    document.getElementById('new').checked = true;
+                }
+            }
+
+            updateStatus(`Ready to continue conversation with ${selectedFanId}`);
+            document.getElementById('fan_message').focus();
+        }
+
         function showFrameworkInfo(framework) {
             const info = document.getElementById('framework-info');
             const phaseInfo = document.getElementById('phase-info');
             const categoryInfo = document.getElementById('category-info');
-            
-            phaseInfo.innerHTML = `<strong>Phase ${framework.current_phase}:</strong> ${framework.phase_name}`;
-            categoryInfo.innerHTML = `<strong>Category:</strong> ${framework.fan_category}`;
-            
-            info.style.display = 'block';
-        }
-        
-        // Copy function
-        document.getElementById('copy-btn').addEventListener('click', function() {
-            if (finalResponse) {
-                navigator.clipboard.writeText(finalResponse).then(() => {
-                    this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
-                    this.style.background = 'rgba(40, 167, 69, 0.8)';
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-copy me-1"></i>Copy Response';
-                        this.style.background = 'rgba(255, 255, 255, 0.25)';
-                    }, 2000);
-                }).catch(err => {
-                    alert('Copy failed. Select and copy manually.');
-                });
-            }
-        });
-        
-        // MAIN GENERATE BUTTON EVENT
-        document.getElementById('generate-btn').addEventListener('click', async function() {
-            console.log('🚀 Generate Memory Response clicked');
-            
-            // Get form values
-            const fanId = document.getElementById('fan_id').value.trim();
-            const creator = document.getElementById('creator').value;
-            const fanTypeEl = document.querySelector('input[name="fan_type"]:checked');
-            const fanMessage = document.getElementById('fan_message').value.trim();
-            const currentPhase = parseInt(document.getElementById('current_phase').value);
-            
-            console.log('📝 Form Values:', { fanId, creator, fanType: fanTypeEl?.value, fanMessage: fanMessage?.substring(0, 50), currentPhase });
-            
-            // Validation
-            if (!fanId) {
-                alert('Please enter a Fan ID for memory tracking');
-                return;
-            }
-            
-            if (!creator) {
-                alert('Please select a creator');
-                return;
-            }
-            
-            if (!fanTypeEl) {
-                alert('Please select fan type');
-                return;
-            }
-            
-            if (!fanMessage) {
-                alert('Please enter fan message');
-                return;
-            }
-            
-            // Disable button and show loading
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing Memory...';
-            
-            // Hide previous response
-            document.getElementById('ai-response').style.display = 'none';
-            document.getElementById('copy-btn').style.display = 'none';
-            document.getElementById('framework-info').style.display = 'none';
-            document.getElementById('returning-fan-alert').style.display = 'none';
-            
-            updateStatus('🧠 Analyzing with Session Memory...');
-            
-            const requestData = {
-                fan_id: fanId,
-                creator: creator,
-                fan_type: fanTypeEl.value,
-                fan_message: fanMessage,
-                current_phase: currentPhase
-            };
-            
-            console.log('📡 Sending Memory Request:', requestData);
-            
-            try {
-                const response = await fetch('/api/generate_response', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestData)
-                });
-                
-                console.log('📡 Response status:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                console.log('📊 Memory Response data:', data);
-                
-                if (data.success) {
-                    const memoryEnhanced = data.memory && data.memory.returning_fan;
-                    showResponse(data.response, false, memoryEnhanced);
-                    
-                    if (data.memory) {
-                        updateMemoryDisplay(data.memory);
-                    }
-                    
-                    if (data.framework) {
-                        showFrameworkInfo(data.framework);
-                    }
-                    
-                    updateStatus(`✅ Memory-enhanced response by ${data.creator} - Phase ${data.framework.current_phase}`);
-                } else {
-                    showResponse(`Error: ${data.error}`, true);
-                    updateStatus('❌ Failed to generate response');
-                }
-                
-            } catch (error) {
-                console.error('❌ Request failed:', error);
-                showResponse(`Network Error: ${error.message}`, true);
-                updateStatus('❌ Connection failed');
-            } finally {
-                // Re-enable button
-                this.disabled = false;
-                this.innerHTML = '<i class="fas fa-magic me-2"></i>Generate Memory Response';
-            }
-        });
-        
-        // Prevent form submission
-        document.addEventListener('submit', function(e) {
-            e.preventDefault();
-        });
-
-        console.log('🎯 FanFocus Session Memory loaded successfully');
-    </script>
-</body>
-</html>
