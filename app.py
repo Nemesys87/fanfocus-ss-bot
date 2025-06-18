@@ -318,7 +318,7 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
         }
         
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
             headers=headers,
             json=payload,
             timeout=1000
