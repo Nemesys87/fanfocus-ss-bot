@@ -48,7 +48,7 @@ FAN_PERSONALITIES = {
 @app.route('/')
 def index():
     # Questa rotta serve principalmente per il Healthcheck di Railway.
-    return jsonify({'status': 'ok', 'message': 'Monetization Engine is running.'})
+    return render_template('index.html')
 
 # Cervello di monetizzazione
 def detect_monetization_opportunity(message_lower):
