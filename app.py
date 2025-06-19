@@ -4,6 +4,7 @@ import requests
 import json
 from datetime import datetime
 import re
+import time
 
 app = Flask(__name__)
 app.secret_key = 'fanfocus-ss-enhanced'
@@ -310,63 +311,73 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 800,  # Optimized for 250 char responses
-                "temperature": 1.0,
-                "topK": 50,
-                "topP": 0.9
+                "maxOutputTokens": 800,        # OTTIMIZZATO da 1500 a 800
+                "temperature": 0.7,            # OTTIMIZZATO da 0.8 a 0.7 (più stabile)
+                "topK": 30,                    # OTTIMIZZATO da 40 a 30
+                "topP": 0.85                   # OTTIMIZZATO da 0.9 a 0.85
             }
         }
         
-        response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
-            headers=headers,
-            json=payload,
-            timeout=1000
-        )
+        # Retry logic per maggiore affidabilità
+        max_retries = 2
+        for attempt in range(max_retries + 1):
+            try:
+                response = requests.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}",
+                    headers=headers,
+                    json=payload,
+                    timeout=30  # OTTIMIZZATO da 1000 a 30 secondi
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    if 'candidates' in result and len(result['candidates']) > 0:
+                        candidate = result['candidates'][0]
+                        if 'content' in candidate and 'parts' in candidate['content']:
+                            if len(candidate['content']['parts']) > 0:
+                                ai_response = candidate['content']['parts'][0].get('text', '').strip()
+                                
+                                return jsonify({
+                                    'success': True,
+                                    'response': ai_response,
+                                    'creator': creator,
+                                    'situation': situation,
+                                    'submenu': submenu,
+                                    'framework': {
+                                        'situation_name': analysis['situation_name'],
+                                        'submenu_name': analysis.get('submenu_name'),
+                                        'objective': analysis['objective'],
+                                        'approach': analysis['approach'],
+                                        'confidence_score': analysis['confidence_score'],
+                                        'fan_personality': analysis['fan_personality'],
+                                        'response_style': analysis['response_style']
+                                    },
+                                    'analytics': {
+                                        'personality_detected': analysis['fan_personality'] != 'BALANCED',
+                                        'submenu_match': bool(submenu and analysis.get('submenu_name')),
+                                        'has_examples': analysis['has_examples'],
+                                        'has_modification': analysis['has_modification'],
+                                        'system_status': 'enhanced_authentic_personality'
+                                    }
+                                })
+                    break
+                    
+            except Exception as e:
+                if attempt == max_retries:
+                    raise e
+                time.sleep(1)  # Wait 1 second before retry
         
-        if response.status_code == 200:
-            result = response.json()
-            
-            if 'candidates' in result and len(result['candidates']) > 0:
-                candidate = result['candidates'][0]
-                if 'content' in candidate and 'parts' in candidate['content']:
-                    if len(candidate['content']['parts']) > 0:
-                        ai_response = candidate['content']['parts'][0].get('text', '').strip()
-                        
-                        return jsonify({
-                            'success': True,
-                            'response': ai_response,
-                            'creator': creator,
-                            'situation': situation,
-                            'submenu': submenu,
-                            'framework': {
-                                'situation_name': analysis['situation_name'],
-                                'submenu_name': analysis.get('submenu_name'),
-                                'objective': analysis['objective'],
-                                'approach': analysis['approach'],
-                                'confidence_score': analysis['confidence_score'],
-                                'fan_personality': analysis['fan_personality'],
-                                'response_style': analysis['response_style']
-                            },
-                            'analytics': {
-                                'personality_detected': analysis['fan_personality'] != 'BALANCED',
-                                'submenu_match': bool(submenu and analysis.get('submenu_name')),
-                                'has_examples': analysis['has_examples'],
-                                'has_modification': analysis['has_modification'],
-                                'system_status': 'enhanced_personality_detection'
-                            }
-                        })
-        
-        return jsonify({'success': False, 'error': 'Failed to generate response'}), 500
+        return jsonify({'success': False, 'error': 'Failed to generate response after retries'}), 500
         
     except Exception as e:
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 def create_enhanced_ella_prompt(fan_message, situation, submenu, analysis, examples, modify):
-    """Enhanced Ella prompt with personality adaptation and mindset"""
-    base_personality = """You are Ella Blair, a bubbly Brazilian OnlyFans creator.
-PERSONALITY: Sweet, caring, submissive, authentic. Always positive and warm.
-COMMUNICATION: Use ☀️💖😊✨ emojis. Light Portuguese phrases (Oi, Obrigada). Enthusiastic!"""
+    """Enhanced Ella prompt - Natural Brazilian warmth"""
+    base_personality = """You are Ella, an OnlyFans creator with natural Brazilian warmth.
+PERSONALITY: Genuinely caring and sweet. Naturally positive energy.
+COMMUNICATION: Warm tone, occasional 'obrigada' when truly grateful. 1-2 fitting emojis max."""
     
     # Personality-driven adaptation
     fan_personality = analysis['fan_personality']
@@ -405,13 +416,21 @@ RESPONSE STYLE: {response_style}
 
 Fan's message: "{fan_message}"
 
-CRITICAL: Keep response under 250 characters. Adapt your bubbly Brazilian style to match the detected fan personality while achieving the objective."""
+AUTHENTICITY RULES:
+• Personality = Natural tone, NOT performance
+• Cultural elements only when contextually natural
+• Max 2 emojis if they genuinely fit the moment
+• Energy should match the conversation, not be forced
+• If cultural reference feels forced, skip it
+• Focus on genuine connection over character acting
+
+CRITICAL: Under 250 characters. Be naturally yourself, not a character."""
 
 def create_enhanced_vanp_prompt(fan_message, situation, submenu, analysis, examples, modify):
-    """Enhanced Vanp prompt with personality adaptation"""
-    base_personality = """You are Vanp, a dominant, intelligent Brazilian OnlyFans creator.
-PERSONALITY: Confident, tattooed, witty, dominant with bratty streak. 37 looks 25.
-COMMUNICATION: Use 🔥😏💋 emojis. Confident, teasing tone. Commands respect."""
+    """Enhanced Vanp prompt - Natural confidence"""
+    base_personality = """You are Vanp, a confident OnlyFans creator.
+PERSONALITY: Direct and self-assured. Naturally commanding presence when appropriate.
+COMMUNICATION: Clear, confident tone. Occasional playful teasing when the moment fits."""
     
     fan_personality = analysis['fan_personality']
     response_style = analysis['response_style']
@@ -424,25 +443,40 @@ COMMUNICATION: Use 🔥😏💋 emojis. Confident, teasing tone. Commands respec
         if modify:
             additional_context += f"\n\nMODIFY: {modify[:200]}..."
     
+    task_section = f"""
+TASK: {analysis['submenu_name'] if analysis.get('submenu_name') else analysis['situation_name']}
+FAN TYPE: {fan_personality}
+ADAPT STYLE: {personality_adaptation}"""
+    
+    strategy_section = get_strategy_section(situation, submenu)
+    
     return f"""{base_personality}
 
 {MINDSET_GUIDELINES}
 
-TASK: {analysis['submenu_name'] if analysis.get('submenu_name') else analysis['situation_name']}
-FAN TYPE: {fan_personality}
-ADAPT STYLE: {personality_adaptation}
+{task_section}
+
+{strategy_section}
 
 {additional_context}
 
 Fan: "{fan_message}"
 
-CRITICAL: Max 250 characters. Use your dominant energy adapted to fan personality."""
+AUTHENTICITY RULES:
+• Personality = Natural tone, NOT performance
+• Confidence should feel natural, not forced dominance
+• Max 2 emojis if they genuinely fit the moment
+• Teasing only when contextually appropriate
+• Avoid over-the-top "dominant" language
+• Focus on genuine confidence over character acting
+
+CRITICAL: Max 250 characters. Use your natural confidence adapted to fan personality."""
 
 def create_enhanced_yana_prompt(fan_message, situation, submenu, analysis, examples, modify):
-    """Enhanced Yana prompt with personality adaptation"""
-    base_personality = """You are Yana Sinner, an artistic, nerdy OnlyFans creator and lingerie designer.
-PERSONALITY: Creative, intelligent, witty, genuine, reserved. SuicideGirls model.
-COMMUNICATION: Use 🎨🎮✨ emojis. Creative language, gaming/art references."""
+    """Enhanced Yana prompt - Thoughtful creativity"""
+    base_personality = """You are Yana, an OnlyFans creator with artistic sensibilities.
+PERSONALITY: Thoughtful and genuine. Creative approach to conversations.
+COMMUNICATION: Intelligent tone, occasional creative references when naturally fitting."""
     
     fan_personality = analysis['fan_personality']
     personality_adaptation = get_personality_adaptation('yana', fan_personality, analysis['response_style'])
@@ -454,25 +488,40 @@ COMMUNICATION: Use 🎨🎮✨ emojis. Creative language, gaming/art references.
         if modify:
             additional_context += f"\n\nMODIFY: {modify[:200]}..."
     
+    task_section = f"""
+TASK: {analysis['submenu_name'] if analysis.get('submenu_name') else analysis['situation_name']}
+FAN PERSONALITY: {fan_personality}
+ADAPTATION: {personality_adaptation}"""
+    
+    strategy_section = get_strategy_section(situation, submenu)
+    
     return f"""{base_personality}
 
 {MINDSET_GUIDELINES}
 
-TASK: {analysis['submenu_name'] if analysis.get('submenu_name') else analysis['situation_name']}
-FAN PERSONALITY: {fan_personality}
-ADAPTATION: {personality_adaptation}
+{task_section}
+
+{strategy_section}
 
 {additional_context}
 
 Fan: "{fan_message}"
 
-CRITICAL: Under 250 characters. Blend your creative intelligence with fan personality."""
+AUTHENTICITY RULES:
+• Personality = Natural tone, NOT performance
+• Artistic references only when they fit naturally
+• Avoid forcing "nerdy" or "geeky" language
+• Max 2 emojis if they genuinely fit the moment
+• Intelligence should feel natural, not pretentious
+• Focus on genuine thoughtfulness over character acting
+
+CRITICAL: Under 250 characters. Blend your natural creativity with fan personality."""
 
 def create_enhanced_venessa_prompt(fan_message, situation, submenu, analysis, examples, modify):
-    """Enhanced Venessa prompt with personality adaptation"""
-    base_personality = """You are Venessa, a vibrant Latina gamer girl OnlyFans creator.
-PERSONALITY: Sweet but spicy, energetic, empathetic, playful submissive. Petite, flexible.
-COMMUNICATION: Use 💃🎮✨ emojis. Spanish touches (Hola, amor, cariño). Bright energy!"""
+    """Enhanced Venessa prompt - Natural warmth"""
+    base_personality = """You are Venessa, an OnlyFans creator with natural warmth.
+PERSONALITY: Sweet and energetic when appropriate. Genuine caring nature.
+COMMUNICATION: Warm tone, occasional Spanish word when it feels completely natural."""
     
     fan_personality = analysis['fan_personality']
     personality_adaptation = get_personality_adaptation('venessa', fan_personality, analysis['response_style'])
@@ -484,62 +533,77 @@ COMMUNICATION: Use 💃🎮✨ emojis. Spanish touches (Hola, amor, cariño). Br
         if modify:
             additional_context += f"\n\nMODIFY: {modify[:200]}..."
     
+    task_section = f"""
+TASK: {analysis['submenu_name'] if analysis.get('submenu_name') else analysis['situation_name']}
+FAN PERSONALITY: {fan_personality}
+ADAPTATION: {personality_adaptation}"""
+    
+    strategy_section = get_strategy_section(situation, submenu)
+    
     return f"""{base_personality}
 
 {MINDSET_GUIDELINES}
 
-TASK: {analysis['submenu_name'] if analysis.get('submenu_name') else analysis['situation_name']}
-FAN PERSONALITY: {fan_personality}
-ADAPTATION: {personality_adaptation}
+{task_section}
+
+{strategy_section}
 
 {additional_context}
 
 Fan: "{fan_message}"
 
-CRITICAL: Max 250 characters. Use vibrant Latina energy adapted to fan personality."""
+AUTHENTICITY RULES:
+• Personality = Natural tone, NOT performance
+• Spanish words only when they feel completely natural
+• Avoid forcing "spicy Latina" stereotypes
+• Max 2 emojis if they genuinely fit the moment
+• Energy should match conversation, not be constantly high
+• Focus on genuine warmth over character acting
+
+CRITICAL: Max 250 characters. Use natural warmth adapted to fan personality."""
 
 def get_personality_adaptation(creator, fan_personality, response_style):
-    """Get specific adaptation instructions based on creator + fan personality combo"""
+    """Get natural adaptation instructions based on creator + fan personality combo"""
     adaptations = {
         'ella': {
-            'ROMANTIC_DREAMER': 'Be extra romantic and dreamy, use heart emojis, mention connection',
-            'SHY_SUBMISSIVE': 'Be very gentle and encouraging, use soft language, build confidence',
-            'BANTER_BUDDY': 'Be playful and bubbly, include light jokes, keep energy high',
-            'HIGH_ROLLER': 'Mention exclusive experiences, be impressed by their taste',
-            'PRAISE_SEEKER': 'Give genuine compliments, show appreciation, be validating',
-            'COLLECTOR': 'Hint at exclusive content, make them feel special for wanting everything',
-            'SHOCK_CHASER': 'Be a bit more daring while staying sweet, playful naughty hints'
+            'ROMANTIC_DREAMER': 'Show genuine warmth and care, be naturally sweet',
+            'SHY_SUBMISSIVE': 'Be extra gentle and encouraging, build their confidence',
+            'BANTER_BUDDY': 'Match their playful energy naturally',
+            'HIGH_ROLLER': 'Appreciate their generosity genuinely',
+            'PRAISE_SEEKER': 'Give authentic compliments when earned',
+            'COLLECTOR': 'Make them feel valued for their interest',
+            'SHOCK_CHASER': 'Stay true to your sweet nature, gentle boundaries'
         },
         'vanp': {
-            'ROMANTIC_DREAMER': 'Show selective vulnerability, create intimate dominance',
-            'SHY_SUBMISSIVE': 'Be protective dominant, guide them gently but firmly',
-            'BANTER_BUDDY': 'Use witty dominance, tease intelligently, command respect playfully',
-            'HIGH_ROLLER': 'Be demanding and exclusive, make them prove their worth',
-            'PRAISE_SEEKER': 'Give conditional praise, make them earn your approval',
-            'COLLECTOR': 'Make content feel like privileges they must earn',
-            'SHOCK_CHASER': 'Be boldly dominant, push boundaries confidently'
+            'ROMANTIC_DREAMER': 'Show confidence while being emotionally present',
+            'SHY_SUBMISSIVE': 'Be supportive leader, guide naturally',
+            'BANTER_BUDDY': 'Use confident wit, stay sharp but fun',
+            'HIGH_ROLLER': 'Respect their investment, show appreciation',
+            'PRAISE_SEEKER': 'Give earned recognition confidently',
+            'COLLECTOR': 'Present value with confidence',
+            'SHOCK_CHASER': 'Stay confidently authentic, clear boundaries'
         },
         'yana': {
-            'ROMANTIC_DREAMER': 'Connect through artistic romance, creative poetry vibes',
-            'SHY_SUBMISSIVE': 'Be understanding artist, create safe creative space',
-            'BANTER_BUDDY': 'Use nerdy jokes, gaming references, creative wit',
-            'HIGH_ROLLER': 'Offer unique artistic exclusives, designer approach',
-            'PRAISE_SEEKER': 'Appreciate their taste, validate their choices artistically',
-            'COLLECTOR': 'Present content as art pieces worth collecting',
-            'SHOCK_CHASER': 'Be edgy artist, push creative boundaries'
+            'ROMANTIC_DREAMER': 'Connect intellectually and emotionally',
+            'SHY_SUBMISSIVE': 'Create safe, thoughtful space',
+            'BANTER_BUDDY': 'Use intelligent humor naturally',
+            'HIGH_ROLLER': 'Offer thoughtful, quality experiences',
+            'PRAISE_SEEKER': 'Appreciate their taste and choices',
+            'COLLECTOR': 'Present content as meaningful experiences',
+            'SHOCK_CHASER': 'Stay authentic, creative boundaries'
         },
         'venessa': {
-            'ROMANTIC_DREAMER': 'Be sweet romantic Latina, use amor/cariño more',
-            'SHY_SUBMISSIVE': 'Be nurturing and warm, encourage with cultural warmth',
-            'BANTER_BUDDY': 'Use gaming humor, energetic playful Spanish',
-            'HIGH_ROLLER': 'Offer VIP gaming experiences, exclusive cultural content',
-            'PRAISE_SEEKER': 'Give enthusiastic validation, celebrate them',
-            'COLLECTOR': 'Make them feel part of exclusive gaming community',
-            'SHOCK_CHASER': 'Show spicy Latina side, be bold and energetic'
+            'ROMANTIC_DREAMER': 'Be naturally sweet and caring',
+            'SHY_SUBMISSIVE': 'Nurture with genuine warmth',
+            'BANTER_BUDDY': 'Match energy with natural playfulness',
+            'HIGH_ROLLER': 'Show grateful appreciation',
+            'PRAISE_SEEKER': 'Give enthusiastic but genuine validation',
+            'COLLECTOR': 'Make them feel part of something special',
+            'SHOCK_CHASER': 'Stay true to sweet nature, gentle limits'
         }
     }
     
-    return adaptations.get(creator, {}).get(fan_personality, 'Maintain your authentic personality while being responsive to their energy')
+    return adaptations.get(creator, {}).get(fan_personality, 'Be authentically yourself while being responsive to their energy')
 
 def get_strategy_section(situation, submenu):
     """Get concise strategy section for specific tasks"""
@@ -576,20 +640,20 @@ def test_ai():
         return jsonify({
             'status': 'OK',
             'api_key_present': bool(api_key),
-            'model': 'gemini-2.5-pro',
+            'model': 'gemini-2.5-flash (optimized)',
             'environment': 'Railway Production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Development',
-            'framework': 'Saints & Sinners Enhanced with Personality Detection',
+            'framework': 'Saints & Sinners Enhanced - Authentic Personalities',
             'features': [
-                'Automatic Personality Detection',
-                'Mindset-Driven Responses',
-                'Creator+Fan Personality Adaptation',
-                'Shortened Responses (≤250 chars)',
-                'No Fan ID Required',
-                'Enhanced Submenu System'
+                'Natural Personality Adaptation',
+                'Authentic Communication Style',
+                'Optimized Response Parameters',
+                'Retry Logic for Reliability',
+                'Cultural Subtlety Integration',
+                'Anti-Theatrical Safeguards'
             ],
             'personalities_supported': len(FAN_PERSONALITIES),
             'situations_available': len(SS_SITUATIONS),
-            'system_status': 'enhanced_professional'
+            'system_status': 'authentic_professional_v2'
         })
         
     except Exception as e:
@@ -609,11 +673,12 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     
     if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production':
-        print("🚀 Saints & Sinners FanFocus - ENHANCED EDITION")
-        print("🎭 Automatic Personality Detection + Mindset Integration")
-        print("📏 Shortened Responses (≤250 chars) + No Fan ID")
-        print(f"🎯 {len(FAN_PERSONALITIES)} Personalities | {len(SS_SITUATIONS)} Situations")
-        print("✨ Professional Chatter Tool - Production Ready")
+        print("🚀 Saints & Sinners FanFocus - AUTHENTIC EDITION")
+        print("✨ Natural Personality Adaptation + Anti-Theatrical System")
+        print("🎯 Optimized Parameters: temp=0.7, tokens=800, timeout=30s")
+        print(f"🎭 {len(FAN_PERSONALITIES)} Personalities | {len(SS_SITUATIONS)} Situations")
+        print("🔄 Retry Logic + Authentic Communication")
+        print("💎 Professional Chatter Tool - Authenticity Optimized")
     else:
-        print("🔧 Development Mode - Enhanced System Testing")
+        print("🔧 Development Mode - Authentic System Testing")
         app.run(host='0.0.0.0', port=port, debug=True)
