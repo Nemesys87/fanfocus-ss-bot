@@ -6,7 +6,7 @@
   "deploy": {
     "numReplicas": 1,
     "restartPolicyType": "ON_FAILURE",
-    "healthcheckPath": "/api/test_ai",
+    "healthcheckPath": "/",
     "healthcheckTimeout": 10
   }
 }
