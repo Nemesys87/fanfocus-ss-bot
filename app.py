@@ -56,11 +56,12 @@ S_AND_S_KNOWLEDGE_BASE = {
 def index():
     return render_template('index.html')
 
+# SOSTITUISCI LA VECCHIA FUNZIONE CON QUESTA NUOVA VERSIONE CORRETTA
+
 def determine_final_strategy(fan_message_lower, situation, submenu):
-    """Determina la strategia S&S basata sulla selezione dell'utente."""
+    """Determina la strategia S&S corretta con una logica a due priorità e un fallback robusto."""
     
-    # Priorità Massima: Cogliere opportunità di monetizzazione esplicite (come da nostra logica precedente)
-    # Questo si allinea con la gestione dei "Buying Signals" dei vostri documenti.
+    # PRIORITÀ 1: Cogliere opportunità di monetizzazione esplicite
     refuses_ppv = ('ppv' in fan_message_lower or 'unlock' in fan_message_lower) and ('don\'t' in fan_message_lower or 'not ' in fan_message_lower or 'anymore' in fan_message_lower)
     offers_tip = 'tip' in fan_message_lower or 'send you' in fan_message_lower or 'spoil' in fan_message_lower or 'money' in fan_message_lower or 'help' in fan_message_lower
     
@@ -69,18 +70,29 @@ def determine_final_strategy(fan_message_lower, situation, submenu):
     if offers_tip:
         return {'angle': 'DIRECT_TIP_OFFER', 'strategy': "S&S Tactic: The fan is offering to tip/spoil. Thank him enthusiastically and IMMEDIATELY tie it to an instant, exclusive reward to reinforce the behavior."}
 
-    # Priorità Secondaria: Eseguire il task S&S selezionato dall'utente
+    # PRIORITÀ 2: Eseguire il task S&S selezionato dall'utente
     if situation in S_AND_S_KNOWLEDGE_BASE["phases"]:
         phase_data = S_AND_S_KNOWLEDGE_BASE["phases"][situation]
-        
-        # Gestisce situazioni con sottomenù (come KYC) e senza
-        strategy = phase_data.get(submenu, phase_data.get("strategy", phase_data["philosophy"]))
-        
-        return {'angle': f"TASK: {phase_data['name']}", 'strategy': f"From the S&S Guide: {strategy}"}
+        strategy = None
 
-    # Fallback
-    return {'angle': 'FALLBACK_GENERAL_CHAT', 'strategy': "Default to Core Philosophy: Build the relationship. Use the 80/20 rule. Ask an open-ended question about him."}
+        # Cerca nell'ordine corretto: sottomenù specifico -> strategia generale -> filosofia generale
+        if submenu and submenu in phase_data:
+            strategy = phase_data[submenu]
+        
+        if not strategy:
+            strategy = phase_data.get("strategy")
+        
+        if not strategy:
+            strategy = phase_data.get("philosophy")
 
+        # Se ancora non c'è una strategia, usa il fallback
+        if not strategy:
+            strategy = S_AND_S_KNOWLEDGE_BASE["core_philosophy"]
+
+        return {'angle': f"TASK: {phase_data.get('name', situation)}", 'strategy': f"From the S&S Guide: {strategy}"}
+
+    # Fallback di emergenza se la situazione non è nel manuale
+    return {'angle': 'FALLBACK_GENERAL_CHAT', 'strategy': "Default to Core Philosophy: Build the relationship. Use the 80/20 Rule. Ask an open-ended question about him."}
 @app.route('/api/generate_response', methods=['POST'])
 def generate_response():
     try:
