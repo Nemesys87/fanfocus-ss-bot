@@ -318,7 +318,7 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
         }
         
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-06-05:generateContent?key={api_key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
             headers=headers,
             json=payload,
             timeout=1000
@@ -576,7 +576,7 @@ def test_ai():
         return jsonify({
             'status': 'OK',
             'api_key_present': bool(api_key),
-            'model': 'gemini-2.5-pro-preview-06-05',
+            'model': 'gemini-2.5-pro',
             'environment': 'Railway Production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Development',
             'framework': 'Saints & Sinners Enhanced with Personality Detection',
             'features': [
