@@ -313,7 +313,7 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 1000,       # Aumentato per Gemini 2.5 Pro
+                "maxOutputTokens": 2048,       # Aumentato per Gemini 2.5 Pro
                 "temperature": 0.8,            # Ottimale per creatività Pro
                 "topK": 40,                    # Più opzioni per Pro
                 "topP": 0.95,                  # Massima qualità
