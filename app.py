@@ -58,6 +58,8 @@ def index():
 
 # SOSTITUISCI LA VECCHIA FUNZIONE CON QUESTA NUOVA VERSIONE CORRETTA
 
+# SOSTITUISCI LA VECCHIA FUNZIONE CON QUESTA VERSIONE CORRETTA E PIÙ ROBUSTA
+
 def determine_final_strategy(fan_message_lower, situation, submenu):
     """Determina la strategia S&S corretta con una logica a due priorità e un fallback robusto."""
     
@@ -71,10 +73,11 @@ def determine_final_strategy(fan_message_lower, situation, submenu):
         return {'angle': 'DIRECT_TIP_OFFER', 'strategy': "S&S Tactic: The fan is offering to tip/spoil. Thank him enthusiastically and IMMEDIATELY tie it to an instant, exclusive reward to reinforce the behavior."}
 
     # PRIORITÀ 2: Eseguire il task S&S selezionato dall'utente
-    if situation in S_AND_S_KNOWLEDGE_BASE["phases"]:
-        phase_data = S_AND_S_KNOWLEDGE_BASE["phases"][situation]
+    # Utilizzo di .get() per evitare crash se la situation non esiste
+    phase_data = S_AND_S_KNOWLEDGE_BASE["phases"].get(situation)
+    
+    if phase_data:
         strategy = None
-
         # Cerca nell'ordine corretto: sottomenù specifico -> strategia generale -> filosofia generale
         if submenu and submenu in phase_data:
             strategy = phase_data[submenu]
@@ -85,14 +88,14 @@ def determine_final_strategy(fan_message_lower, situation, submenu):
         if not strategy:
             strategy = phase_data.get("philosophy")
 
-        # Se ancora non c'è una strategia, usa il fallback
+        # Se ancora non c'è una strategia, usa la filosofia di base come fallback per questa fase
         if not strategy:
             strategy = S_AND_S_KNOWLEDGE_BASE["core_philosophy"]
 
         return {'angle': f"TASK: {phase_data.get('name', situation)}", 'strategy': f"From the S&S Guide: {strategy}"}
 
-    # Fallback di emergenza se la situazione non è nel manuale
-    return {'angle': 'FALLBACK_GENERAL_CHAT', 'strategy': "Default to Core Philosophy: Build the relationship. Use the 80/20 Rule. Ask an open-ended question about him."}
+    # Fallback di emergenza se la situazione non è proprio nel manuale
+    return {'angle': 'FALLBACK_UNHANDLED_SITUATION', 'strategy': "Default to Core Philosophy: Build the relationship. Use the 80/20 Rule. Ask an open-ended question about him."}
 @app.route('/api/generate_response', methods=['POST'])
 def generate_response():
     try:
