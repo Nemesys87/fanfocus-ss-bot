@@ -310,9 +310,9 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 1500,  # Optimized for 250 char responses
-                "temperature": 0.8,
-                "topK": 40,
+                "maxOutputTokens": 800,  # Optimized for 250 char responses
+                "temperature": 1.0,
+                "topK": 50,
                 "topP": 0.9
             }
         }
