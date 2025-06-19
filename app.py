@@ -155,7 +155,7 @@ def generate_enhanced_response(creator, fan_message, strategy_analysis):
                 {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"}
             ]
         }
-        response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key={api_key}", headers=headers, json=payload, timeout=90)
+       response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}", headers=headers, json=payload, timeout=90)
         
         if response.status_code == 200:
             result = response.json()
