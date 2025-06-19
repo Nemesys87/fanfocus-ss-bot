@@ -280,11 +280,3 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    print("🚀 Saints & Sinners FanFocus - MONETIZATION ENGINE v2.0")
-    print("🧠 Primary Directive: Always Be Closing (ABC)")
-    print("🎯 Monetization-first, tone-second logic")
-    print(f"💰 Ready to convert conversations into revenue on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=True)
