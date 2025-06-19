@@ -291,7 +291,7 @@ def detect_fan_personality(message_lower):
     return 'BALANCED'  # Default if no specific personality detected
 
 def generate_enhanced_response(creator, situation, submenu, fan_message, analysis, examples, modify):
-    """Generate response with personality adaptation and mindset integration"""
+    """Generate response with Gemini 2.5 Pro - Maximum Quality"""
     try:
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
         if not api_key:
@@ -308,69 +308,142 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
         prompt = creator_prompts.get(creator, creator_prompts['ella'])
         
         headers = {'Content-Type': 'application/json'}
+        
+        # CONFIGURAZIONE OTTIMIZZATA PER GEMINI 2.5 PRO - QUALITÀ MASSIMA
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 800,        # OTTIMIZZATO da 1500 a 800
-                "temperature": 0.7,            # OTTIMIZZATO da 0.8 a 0.7 (più stabile)
-                "topK": 30,                    # OTTIMIZZATO da 40 a 30
-                "topP": 0.85                   # OTTIMIZZATO da 0.9 a 0.85
-            }
+                "maxOutputTokens": 1000,       # Aumentato per Gemini 2.5 Pro
+                "temperature": 0.8,            # Ottimale per creatività Pro
+                "topK": 40,                    # Più opzioni per Pro
+                "topP": 0.95,                  # Massima qualità
+                "candidateCount": 1            # Singola risposta ottimizzata
+            },
+            "safetySettings": [
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH", 
+                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "threshold": "BLOCK_NONE"  # Permissivo per OnlyFans
+                },
+                {
+                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                }
+            ]
         }
         
-        # Retry logic per maggiore affidabilità
-        max_retries = 2
+        print("💎 Using Gemini 2.5 Pro - Maximum Quality Mode")
+        
+        # RETRY LOGIC ESTESO PER GEMINI 2.5 PRO
+        max_retries = 3  # Più tentativi per Pro
+        retry_delays = [2, 5, 10]  # Delays progressivi
+        
         for attempt in range(max_retries + 1):
             try:
+                print(f"🔄 Attempt {attempt + 1}/{max_retries + 1} - Gemini 2.5 Pro")
+                
                 response = requests.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
                     headers=headers,
                     json=payload,
-                    timeout=30  # OTTIMIZZATO da 1000 a 30 secondi
+                    timeout=120  # 2 MINUTI di timeout per Gemini 2.5 Pro
                 )
+                
+                print(f"📡 Response Status: {response.status_code}")
                 
                 if response.status_code == 200:
                     result = response.json()
+                    print(f"✅ API Response received")
                     
                     if 'candidates' in result and len(result['candidates']) > 0:
                         candidate = result['candidates'][0]
+                        
+                        # Check per finish_reason
+                        finish_reason = candidate.get('finishReason', 'UNKNOWN')
+                        print(f"🏁 Finish Reason: {finish_reason}")
+                        
                         if 'content' in candidate and 'parts' in candidate['content']:
                             if len(candidate['content']['parts']) > 0:
                                 ai_response = candidate['content']['parts'][0].get('text', '').strip()
                                 
-                                return jsonify({
-                                    'success': True,
-                                    'response': ai_response,
-                                    'creator': creator,
-                                    'situation': situation,
-                                    'submenu': submenu,
-                                    'framework': {
-                                        'situation_name': analysis['situation_name'],
-                                        'submenu_name': analysis.get('submenu_name'),
-                                        'objective': analysis['objective'],
-                                        'approach': analysis['approach'],
-                                        'confidence_score': analysis['confidence_score'],
-                                        'fan_personality': analysis['fan_personality'],
-                                        'response_style': analysis['response_style']
-                                    },
-                                    'analytics': {
-                                        'personality_detected': analysis['fan_personality'] != 'BALANCED',
-                                        'submenu_match': bool(submenu and analysis.get('submenu_name')),
-                                        'has_examples': analysis['has_examples'],
-                                        'has_modification': analysis['has_modification'],
-                                        'system_status': 'enhanced_authentic_personality'
-                                    }
-                                })
-                    break
+                                if ai_response:  # Verifica che ci sia contenuto
+                                    print(f"💎 Generated Response Length: {len(ai_response)} chars")
+                                    
+                                    return jsonify({
+                                        'success': True,
+                                        'response': ai_response,
+                                        'creator': creator,
+                                        'situation': situation,
+                                        'submenu': submenu,
+                                        'framework': {
+                                            'situation_name': analysis['situation_name'],
+                                            'submenu_name': analysis.get('submenu_name'),
+                                            'objective': analysis['objective'],
+                                            'approach': analysis['approach'],
+                                            'confidence_score': analysis['confidence_score'],
+                                            'fan_personality': analysis['fan_personality'],
+                                            'response_style': analysis['response_style']
+                                        },
+                                        'analytics': {
+                                            'model_used': 'gemini-2.5-pro',
+                                            'attempts_made': attempt + 1,
+                                            'finish_reason': finish_reason,
+                                            'personality_detected': analysis['fan_personality'] != 'BALANCED',
+                                            'submenu_match': bool(submenu and analysis.get('submenu_name')),
+                                            'has_examples': analysis['has_examples'],
+                                            'has_modification': analysis['has_modification'],
+                                            'system_status': 'gemini_2.5_pro_quality_mode'
+                                        }
+                                    })
+                                else:
+                                    print("⚠️ Empty response content")
+                        
+                        # Safety block check
+                        if finish_reason == 'SAFETY':
+                            print("🛡️ Response blocked by safety filters")
+                            
+                elif response.status_code == 429:
+                    print("⏳ Rate limit hit, waiting longer...")
+                    if attempt < max_retries:
+                        time.sleep(retry_delays[attempt] * 2)  # Double delay for rate limits
+                        continue
+                        
+                elif response.status_code >= 500:
+                    print(f"🔧 Server error {response.status_code}, retrying...")
+                    
+                else:
+                    print(f"❌ Unexpected status code: {response.status_code}")
+                    print(f"📄 Response: {response.text[:500]}")
+                    
+            except requests.exceptions.Timeout:
+                print(f"⏰ Timeout on attempt {attempt + 1}")
+                if attempt < max_retries:
+                    print(f"⏳ Waiting {retry_delays[attempt]}s before retry...")
+                    time.sleep(retry_delays[attempt])
+                    continue
                     
             except Exception as e:
-                if attempt == max_retries:
+                print(f"🚨 Exception on attempt {attempt + 1}: {str(e)}")
+                if attempt < max_retries:
+                    time.sleep(retry_delays[attempt])
+                    continue
+                else:
                     raise e
-                time.sleep(1)  # Wait 1 second before retry
         
-        return jsonify({'success': False, 'error': 'Failed to generate response after retries'}), 500
+        return jsonify({
+            'success': False, 
+            'error': 'Failed to generate response after all retries with Gemini 2.5 Pro'
+        }), 500
         
     except Exception as e:
+        print(f"💥 Final error: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 def create_enhanced_ella_prompt(fan_message, situation, submenu, analysis, examples, modify):
@@ -640,20 +713,22 @@ def test_ai():
         return jsonify({
             'status': 'OK',
             'api_key_present': bool(api_key),
-            'model': 'gemini-2.5-flash (optimized)',
+            'model': 'gemini-2.5-pro (QUALITY MODE)',
+            'timeout': '120 seconds',
+            'retries': '3 attempts with progressive delays',
             'environment': 'Railway Production' if os.environ.get('RAILWAY_ENVIRONMENT') else 'Development',
-            'framework': 'Saints & Sinners Enhanced - Authentic Personalities',
+            'framework': 'Saints & Sinners Enhanced - Gemini 2.5 Pro Quality',
             'features': [
+                'Gemini 2.5 Pro Maximum Quality',
+                '120s Timeout for Complex Reasoning',
+                '3-Retry System with Progressive Delays',
                 'Natural Personality Adaptation',
-                'Authentic Communication Style',
-                'Optimized Response Parameters',
-                'Retry Logic for Reliability',
-                'Cultural Subtlety Integration',
-                'Anti-Theatrical Safeguards'
+                'Enhanced Safety Settings for OF',
+                'Professional Logging System'
             ],
             'personalities_supported': len(FAN_PERSONALITIES),
             'situations_available': len(SS_SITUATIONS),
-            'system_status': 'authentic_professional_v2'
+            'system_status': 'gemini_2.5_pro_quality_mode'
         })
         
     except Exception as e:
@@ -673,12 +748,14 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     
     if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production':
-        print("🚀 Saints & Sinners FanFocus - AUTHENTIC EDITION")
+        print("🚀 Saints & Sinners FanFocus - GEMINI 2.5 PRO QUALITY MODE")
+        print("💎 Maximum Quality: 120s timeout, 3 retries, progressive delays")
+        print("🧠 Enhanced Reasoning: Gemini 2.5 Pro for superior responses")
         print("✨ Natural Personality Adaptation + Anti-Theatrical System")
-        print("🎯 Optimized Parameters: temp=0.7, tokens=800, timeout=30s")
         print(f"🎭 {len(FAN_PERSONALITIES)} Personalities | {len(SS_SITUATIONS)} Situations")
-        print("🔄 Retry Logic + Authentic Communication")
-        print("💎 Professional Chatter Tool - Authenticity Optimized")
+        print("🔄 Advanced Retry Logic + Professional Error Handling")
+        print("🎯 Professional Chatter Tool - Pro Quality Optimized")
+        print("⏰ Note: Responses may take 30-60 seconds for maximum quality")
     else:
-        print("🔧 Development Mode - Authentic System Testing")
+        print("🔧 Development Mode - Gemini 2.5 Pro Testing")
         app.run(host='0.0.0.0', port=port, debug=True)
