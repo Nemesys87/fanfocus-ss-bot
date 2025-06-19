@@ -144,7 +144,7 @@ Generate only the response text.
         headers = {'Content-Type': 'application/json'}
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"maxOutputTokens": 300, "temperature": 0.8, "topK": 40, "topP": 0.95},
+            "generationConfig": {"maxOutputTokens": 8192, "temperature": 0.8, "topK": 40, "topP": 0.95},
             "safetySettings": [
                 {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
                 {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
