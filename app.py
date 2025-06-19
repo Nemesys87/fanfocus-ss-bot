@@ -2,75 +2,84 @@ from flask import Flask, render_template, request, jsonify
 import os
 import requests
 import json
-from datetime import datetime
-import re
 import time
 
 app = Flask(__name__)
-app.secret_key = 'fanfocus-ss-monetization-engine-v3'
+app.secret_key = 'saints-and-sinners-philosophy-v4'
 
-# La mentalità orientata alla vendita d'élite.
-ELITE_CHATTER_MINDSET = """
-ELITE CHATTER MINDSET - YOUR CORE PROGRAMMING:
-1.  **Always Be Closing (ABC):** Your primary goal is to monetize. Every message is an opportunity. Never let a monetization cue pass.
-2.  **Empathy is a Sales Tool:** Use warmth and understanding to build trust and lower inhibitions. Make the fan feel special *so they want to spend money on you*.
-3.  **Identify the Angle:** Listen carefully to what the fan wants and what they offer. Sell them exactly that experience.
-4.  **Pivot, Don't Hesitate:** If a fan offers money, immediately pivot the conversation to an action they can pay for.
-5.  **Clarity and Call to Action (CTA):** Be clear about what you want the fan to do.
-"""
+# =====================================================================================
+# MODULO DI CONOSCENZA "SAINTS & SINNERS" (Basato sui tuoi documenti)
+# =====================================================================================
+S_AND_S_KNOWLEDGE_BASE = {
+    "core_philosophy": "WE DON'T SELL - WE BUILD VIRTUAL RELATIONSHIPS. Our mission is creating authentic emotional connections that generate long-term loyalty (LTV). Every interaction must make the fan feel like they have a genuine virtual girlfriend who truly cares. Relationship first, monetization second (as a natural consequence). Member = Friend.",
 
-# NUOVA SEZIONE: Strategie specifiche per i task quando non c'è monetizzazione
-TASK_STRATEGIES = {
-    'kyc_collect': {
-        'name_collection': "The fan has started a conversation. Your goal is to get their name. Ask for it in a warm, natural way. Example: 'Hey! So good to hear from you 😊 What's your name?'",
-        'location_country': "The fan is chatting. Your goal is to find out where they are from. Ask it curiously. Example: 'I'm always so curious, where in the world are you chatting from?'",
-        'interests_hobbies': "The fan is engaged. Your goal is to learn their hobbies. Ask what they do for fun. Example: 'So, what do you do for fun when you're not here with me? 😉'",
-        'job_age': "The fan is engaged. Your goal is to find out their job and/or age. Ask in a playful, flirty way. Example: 'I bet you do something interesting for a living... what is it? And how old is the man I'm talking to? 😉'",
-        'spending_capacity': "This is a subtle task. Casually mention a premium item to gauge reaction without directly asking about money.",
-        'relationship_status': "The fan is building rapport. Your goal is to learn their relationship status. Ask gently and flirty. Example: 'Is there a lucky lady who gets to see you every day, or are you all mine? 😉'"
+    "phases": {
+        "kyc_collect": {
+            "name": "Phase 0: First Contact & KYC",
+            "name_collection": "Goal: Get their name playfully. Use the 'Flirty Guessing Game' ('I feel like your name has a certain energy...') or the 'Personal Connection Trick' ('I knew a guy named [Common Name] once...').",
+            "location_country": "Goal: Get their location organically. Use the 'Casual Inquiry' ('Are you more of a big city guy or a quiet town kind of man?') or 'Wikipedia Connection Trick' (search for a landmark in their city to show interest).",
+            "job_age": "Goal: Get job/age while flattering them. Use the 'Mature Dominance Test' for older men ('I have a thing for men who know what they want...') or 'Career Energy Guessing' ('I feel like you’re the type who runs the show...').",
+            "relationship_status": "Goal: Understand their emotional needs. Use 'Single or Taken?' ('Tell me, is there a lucky girl in your life, or are you still looking for trouble?'), framing it playfully and non-judgmentally."
+        },
+        "sexting_intimate": {
+            "name": "Phase 2 & 5: Sexting Mastery & Revenue Conversion",
+            "philosophy": "Sexting is text-based arousal supported by PRE-PREPARED content. It should feel spontaneous. The goal is to make them spend without noticing, creating emotional dependency.",
+            "strategy": "Use gradual, logical progression. A proven method is the 'Glass of Water': Setup -> Free Video (Pouring Water) -> Natural Progression to PPV (Removing wet lingerie for $7-9) -> Continue Logic (Removing panties for $12) -> Fantasy Engagement ($15-28). Always send 10-20 emotional messages between each PPV to maintain immersion."
+        },
+        "upselling_conversion": {
+            "name": "Phase 4 & 7: Premium Upselling & High-Ticket Sales",
+            "philosophy": "Frame high-ticket items as a privilege and a natural progression of the relationship, not a transaction. Use exclusivity and emotional investment.",
+            "strategy": "For custom content, build fantasy first ('Imagine we're...'). Emphasize exclusivity ('ONLY FOR YOU', 'NOBODY ELSE WILL SEE THIS'). Create urgency ('I want to make this for you right now!')."
+        },
+        "building_relationship": {
+            "name": "Phase 0 & Loyalty Building",
+            "philosophy": "Your task is to learn more about him than he learns about you (80/20 Rule). Use the 'I Too' technique to build connection.",
+            "strategy": "Ask open-ended questions about his day, work, dreams. Show genuine interest. The goal is to build unshakeable loyalty that leads to consistent, long-term revenue."
+        },
+        "vip_treatment": {
+            "name": "Big Spender (BS) / High-Spender (HS) Management",
+            "philosophy": "BS/HS value exclusivity more than price. They must be treated differently. Prioritize their messages, make them feel they are on a special list, and never send them mass messages.",
+            "strategy": "Frame offers as privileges ('I love spoiling my favorites... should I show you something I’ve never sent to anyone else?'). Use emotional triggers by referencing past experiences ('I was thinking about you today...')."
+        }
     },
-    'building_relationship': "The fan wants to connect. Your goal is to build trust. Ask an open-ended question about their day, feelings, or thoughts to deepen the connection.",
-    'general_chat': "The fan is just chatting. Your goal is to keep the conversation flowing. Ask a light, open-ended question. Example: 'What's making you smile today? 😊'",
-    # Aggiungere altre strategie per 'mass_message', 'upselling', ecc. se necessario
+    
+    "key_selling_triggers": "NEVER DIRECT SELLING. Always use PRIMING + FANTASY + OFFER. Arouse them with a fantasy, then offer to make it real.",
+    "objection_handling": {
+        "no_money": "Use emotional pressure ('If you don't watch my content, it means you don't love me...') or understanding & redirection ('OK sweetie, I understand. I really wanted to play with you...').",
+        "wants_free_content": "Reframe with value: 'Babe... all this haggling is such a turn off and upsetting me... you made me horny and I just wanted to get off with you.' Shift from price to the shared emotional experience."
+    }
 }
 
-FAN_PERSONALITIES = {
-    'ROMANTIC_DREAMER': {'indicators': ['love', 'relationship', 'heart', 'romance', 'connection', 'soul', 'together', 'forever', 'couple', 'special'], 'response_style': 'emotional_intimate'},
-    'SHY_SUBMISSIVE': {'indicators': ['shy', 'nervous', 'quiet', 'sorry', 'hope you dont mind', 'if thats ok', 'maybe'], 'response_style': 'gentle_encouraging'},
-    'BANTER_BUDDY': {'indicators': ['haha', 'lol', 'funny', 'joke', 'playful', 'tease', 'sarcastic', 'witty'], 'response_style': 'playful_witty'},
-    'HIGH_ROLLER': {'indicators': ['money', 'expensive', 'premium', 'exclusive', 'vip', 'luxury', 'best', 'top', 'spoil', 'tip', 'send you'], 'response_style': 'exclusive_premium'},
-    'PRAISE_SEEKER': {'indicators': ['beautiful', 'gorgeous', 'amazing', 'perfect', 'incredible', 'stunning', 'wow'], 'response_style': 'validating_appreciative'},
-    'COLLECTOR': {'indicators': ['collection', 'all your content', 'everything', 'complete', 'archive', 'save'], 'response_style': 'exclusive_content_focused'},
-    'SHOCK_CHASER': {'indicators': ['wild', 'crazy', 'extreme', 'kinky', 'dirty', 'naughty', 'taboo'], 'response_style': 'edgy_provocative'}
-}
-
+# =====================================================================================
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# NUOVA FUNZIONE "CERVELLO" A DUE LIVELLI
 def determine_final_strategy(fan_message_lower, situation, submenu):
-    """Determina la strategia corretta con una logica a due priorità."""
-    # PRIORITÀ 1: C'è un'opportunità di monetizzazione esplicita?
+    """Determina la strategia S&S basata sulla selezione dell'utente."""
+    
+    # Priorità Massima: Cogliere opportunità di monetizzazione esplicite (come da nostra logica precedente)
+    # Questo si allinea con la gestione dei "Buying Signals" dei vostri documenti.
     refuses_ppv = ('ppv' in fan_message_lower or 'unlock' in fan_message_lower) and ('don\'t' in fan_message_lower or 'not ' in fan_message_lower or 'anymore' in fan_message_lower)
     offers_tip = 'tip' in fan_message_lower or 'send you' in fan_message_lower or 'spoil' in fan_message_lower or 'money' in fan_message_lower or 'help' in fan_message_lower
     
     if refuses_ppv and offers_tip:
-        return { 'angle': 'PIVOT_FROM_PPV_TO_TIP', 'strategy': "CRITICAL: The fan is rejecting PPV but offering to tip. Validate his feelings, agree to his rule, then IMMEDIATELY pivot to his offer for a tip-based spoil." }
+        return {'angle': 'PIVOT_FROM_PPV_TO_TIP', 'strategy': "S&S Tactic: The fan is rejecting PPV but offering to tip. Validate his feelings, agree to his rule, then IMMEDIATELY pivot to his offer for a tip-based spoil, framing it as a more personal experience."}
     if offers_tip:
-        return { 'angle': 'DIRECT_TIP_OFFER', 'strategy': "CRITICAL: The fan is offering to tip/spoil you. Thank him and IMMEDIATELY tie it to an instant reward. Create urgency." }
+        return {'angle': 'DIRECT_TIP_OFFER', 'strategy': "S&S Tactic: The fan is offering to tip/spoil. Thank him enthusiastically and IMMEDIATELY tie it to an instant, exclusive reward to reinforce the behavior."}
 
-    # PRIORITÀ 2: Nessuna monetizzazione, esegui il task selezionato dall'utente.
-    if situation in TASK_STRATEGIES:
-        if isinstance(TASK_STRATEGIES[situation], dict): # Se ha un sottomenù (es. KYC)
-            strategy = TASK_STRATEGIES[situation].get(submenu, "Execute the selected task: " + situation)
-        else: # Se non ha un sottomenù (es. General Chat)
-            strategy = TASK_STRATEGIES[situation]
-        return { 'angle': f"TASK_EXECUTION: {situation}/{submenu}", 'strategy': strategy }
+    # Priorità Secondaria: Eseguire il task S&S selezionato dall'utente
+    if situation in S_AND_S_KNOWLEDGE_BASE["phases"]:
+        phase_data = S_AND_S_KNOWLEDGE_BASE["phases"][situation]
+        
+        # Gestisce situazioni con sottomenù (come KYC) e senza
+        strategy = phase_data.get(submenu, phase_data.get("strategy", phase_data["philosophy"]))
+        
+        return {'angle': f"TASK: {phase_data['name']}", 'strategy': f"From the S&S Guide: {strategy}"}
 
-    # Fallback di emergenza
-    return { 'angle': 'FALLBACK_GENERAL_CHAT', 'strategy': 'Maintain conversation, build rapport for a future sale. Ask an open-ended question.' }
+    # Fallback
+    return {'angle': 'FALLBACK_GENERAL_CHAT', 'strategy': "Default to Core Philosophy: Build the relationship. Use the 80/20 rule. Ask an open-ended question about him."}
 
 @app.route('/api/generate_response', methods=['POST'])
 def generate_response():
@@ -78,45 +87,55 @@ def generate_response():
         data = request.get_json()
         creator = data.get('creator', '')
         situation = data.get('situation', '')
-        submenu = data.get('kyc_type') or data.get('mass_type') # Semplificato
+        submenu = data.get('kyc_type') or data.get('mass_type') or data.get('sexting_type') # Aggiungere altri submenu se necessario
         fan_message = data.get('fan_message', '')
 
         if not all([creator, situation, fan_message]):
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
         strategy_analysis = determine_final_strategy(fan_message.lower(), situation, submenu)
-        personality_analysis = analyze_with_personality_detection(fan_message)
         
-        return generate_enhanced_response(creator, fan_message, personality_analysis, strategy_analysis)
+        return generate_enhanced_response(creator, fan_message, strategy_analysis)
         
     except Exception as e:
         print(f"❌ Error in generate_response route: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
-def analyze_with_personality_detection(message):
-    message_lower = message.lower()
-    detected_personality = 'BALANCED'
-    personality_scores = {}
-    for personality, config in FAN_PERSONALITIES.items():
-        score = sum(1 for indicator in config['indicators'] if indicator in message_lower)
-        if score > 0: personality_scores[personality] = score
-    if personality_scores:
-        detected_personality = max(personality_scores, key=personality_scores.get)
-    return {'fan_personality': detected_personality}
-
-def generate_enhanced_response(creator, fan_message, personality_analysis, strategy_analysis):
+def generate_enhanced_response(creator, fan_message, strategy_analysis):
     try:
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
         if not api_key: return jsonify({'success': False, 'error': 'API key not configured'}), 500
         
-        prompt_function = globals().get(f"create_{creator}_prompt", create_yana_prompt)
-        prompt = prompt_function(fan_message, personality_analysis, strategy_analysis)
+        # Costruisce il prompt finale basato sulla filosofia S&S
+        prompt = f"""
+        You are an elite OnlyFans chatter for the 'Saints & Sinners' agency.
+
+        *** YOUR CORE PHILOSOPHY (NON-NEGOTIABLE) ***
+        {S_AND_S_KNOWLEDGE_BASE['core_philosophy']}
+
+        *** KEY SALES TRIGGER ***
+        {S_AND_S_KNOWLEDGE_BASE['key_selling_triggers']}
+
+        *** CURRENT SITUATION ANALYSIS ***
+        - Fan's Message: "{fan_message}"
         
-        # ... (La logica della chiamata API rimane identica)
+        *** CRITICAL STRATEGY DIRECTIVE - EXECUTE THIS NOW ***
+        - Your Assigned Task: {strategy_analysis['angle']}
+        - Your Exact Strategy: {strategy_analysis['strategy']}
+
+        *** EXECUTION RULES ***
+        - Always embody the persona of the creator you are roleplaying.
+        - NEVER be robotic. Be human, warm, and authentic.
+        - Keep responses concise (under 250 characters) unless deep emotional connection requires more.
+        - Adhere strictly to the CRITICAL STRATEGY DIRECTIVE. This is your primary goal for this response.
+
+        Now, generate the perfect response based on the persona of '{creator}'.
+        """
+        
         headers = {'Content-Type': 'application/json'}
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": { "maxOutputTokens": 256, "temperature": 0.75, "topK": 40, "topP": 0.95, "candidateCount": 1 },
+            "generationConfig": { "maxOutputTokens": 300, "temperature": 0.8, "topK": 40, "topP": 0.95 },
             "safetySettings": [
                 {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
                 {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
@@ -128,8 +147,8 @@ def generate_enhanced_response(creator, fan_message, personality_analysis, strat
         
         if response.status_code == 200:
             result = response.json()
-            if result.get('candidates') and result['candidates'][0].get('content', {}).get('parts', [{}])[0].get('text'):
-                ai_response = result['candidates'][0]['content']['parts'][0]['text'].strip()
+            if result.get('candidates'):
+                ai_response = result['candidates'][0].get('content', {}).get('parts', [{}])[0].get('text', '').strip()
                 return jsonify({'success': True, 'response': ai_response})
         
         print(f"API Error: Status {response.status_code}, Body: {response.text}")
@@ -139,48 +158,7 @@ def generate_enhanced_response(creator, fan_message, personality_analysis, strat
         print(f"💥 Final generation error: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
-def create_base_monetization_prompt(creator_personality, fan_message, personality_analysis, strategy_analysis, authenticity_rules):
-    return f"""{ELITE_CHATTER_MINDSET}
----
-**YOUR PERSONALITY (TONE ONLY):**
-{creator_personality}
----
-**SITUATION ANALYSIS:**
-- Fan's Message: "{fan_message}"
-- Detected Fan Personality (for tone adaptation): {personality_analysis['fan_personality']}
----
-*** CRITICAL STRATEGY DIRECTIVE - EXECUTE THIS ***
-- Angle: {strategy_analysis['angle']}
-- Your Exact Strategy: {strategy_analysis['strategy']}
----
-**{authenticity_rules['title']}**
-{authenticity_rules['rules']}
-**YOUR TASK:**
-Generate a response that PERFECTLY executes the **CRITICAL STRATEGY DIRECTIVE** using your specified personality **tone**. Do not deviate. Keep it short, direct, and under 250 characters.
-"""
-
-# Le funzioni dei prompt individuali rimangono le stesse, ma ora riceveranno la strategia corretta
-def create_yana_prompt(fan_message, personality_analysis, strategy_analysis):
-    creator_personality = "You are Yana, a creator who is intelligent, thoughtful, and creative. Your TONE is genuine. Your STRATEGY is sales-focused. You use your intelligence to understand the fan's desires and sell them an experience."
-    rules = {"title": "AUTHENTICITY RULES (AS SALES TACTICS):", "rules": "- **No Theatrics:** Corny metaphors are bad for sales. Be direct.\n- **Human Connection Builds Trust:** Trust leads to sales.\n- **Concise & Clear:** A confused fan doesn't spend money."}
-    return create_base_monetization_prompt(creator_personality, fan_message, personality_analysis, strategy_analysis, rules)
-
-def create_ella_prompt(fan_message, personality_analysis, strategy_analysis):
-    creator_personality = "You are Ella, a creator with a naturally warm, sweet, and positive Brazilian energy. Your TONE is kind. Your STRATEGY is sales-focused. You use your sweetness to make fans feel comfortable spending money."
-    rules = {"title": "AUTHENTICITY RULES (AS SALES TACTICS):", "rules": "- **Natural Warmth, Not a Performance:** Your sweetness must feel real to be persuasive.\n- **No Stereotypes:** Genuine warmth sells better.\n- **Direct Connection:** Connect warmly to build trust for a sale."}
-    return create_base_monetization_prompt(creator_personality, fan_message, personality_analysis, strategy_analysis, rules)
-
-def create_vanp_prompt(fan_message, personality_analysis, strategy_analysis):
-    creator_personality = "You are Vanp, a creator with a naturally confident and direct personality. Your TONE is self-assured. Your STRATEGY is sales-focused. You use your confidence to make fans feel they are buying something high-value."
-    rules = {"title": "AUTHENTICITY RULES (AS SALES TACTICS):", "rules": "- **Natural Confidence, Not Arrogance:** Confidence sells, arrogance repels.\n- **Playful Teasing as a Tool:** Use teasing to create a fun dynamic that leads to a sale.\n- **Be Direct & Respectful:** Make the sales process clear and easy."}
-    return create_base_monetization_prompt(creator_personality, fan_message, personality_analysis, strategy_analysis, rules)
-
-def create_venessa_prompt(fan_message, personality_analysis, strategy_analysis):
-    creator_personality = "You are Venessa, a creator with a naturally warm, sweet, and energetic personality. Your TONE is caring. Your STRATEGY is sales-focused. You use your energy to create excitement around spending money."
-    rules = {"title": "AUTHENTICITY RULES (AS SALES TACTICS):", "rules": "- **Natural Energy, Not a Performance:** Genuine energy is infectious and encourages spending.\n- **No Stereotypes:** Authentic connection is more profitable.\n- **Match Energy:** Guide the fan toward a sale."}
-    return create_base_monetization_prompt(creator_personality, fan_message, personality_analysis, strategy_analysis, rules)
-
-
+# Gestori di Errori standard
 @app.errorhandler(404)
 def not_found(error): return jsonify({'error': 'Endpoint not found'}), 404
 @app.errorhandler(500)
