@@ -353,7 +353,7 @@ def generate_enhanced_response(creator, situation, submenu, fan_message, analysi
                     f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
                     headers=headers,
                     json=payload,
-                    timeout=120  # 2 MINUTI di timeout per Gemini 2.5 Pro
+                    timeout=240  # 2 MINUTI di timeout per Gemini 2.5 Pro
                 )
                 
                 print(f"📡 Response Status: {response.status_code}")
