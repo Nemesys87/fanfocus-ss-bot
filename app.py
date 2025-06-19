@@ -101,10 +101,16 @@ def generate_response():
         print(f"❌ Error in generate_response route: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
+# SOSTITUISCI LA VECCHIA FUNZIONE CON QUESTA NUOVA VERSIONE PIÙ ROBUSTA
+
 def generate_enhanced_response(creator, fan_message, strategy_analysis):
+    """
+    Generate response con focus sulla monetizzazione e con una gestione degli errori molto più robusta.
+    """
     try:
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
-        if not api_key: return jsonify({'success': False, 'error': 'API key not configured'}), 500
+        if not api_key: 
+            return jsonify({'success': False, 'error': 'API key not configured'}), 500
         
         prompt = f"""You are an elite OnlyFans chatter for 'Saints & Sinners'. Your persona is '{creator}'.
 CORE PHILOSOPHY: {S_AND_S_KNOWLEDGE_BASE['core_philosophy']}
@@ -129,19 +135,45 @@ YOUR TASK: Generate a response that PERFECTLY executes the directive with your a
         
         response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}", headers=headers, json=payload, timeout=120)
         
+        # NUOVA LOGICA DI CONTROLLO ROBUSTA
         if response.status_code == 200:
             result = response.json()
-            if result.get('candidates'):
-                ai_response = result['candidates'][0].get('content', {}).get('parts', [{}])[0].get('text', '').strip()
-                return jsonify({'success': True, 'response': ai_response})
-        
-        print(f"API Error: Status {response.status_code}, Body: {response.text}")
-        return jsonify({'success': False, 'error': f'API Error: {response.status_code}'}), 500
+            
+            # Log per il debug, così vediamo sempre cosa risponde Google
+            print(f"Gemini Raw Response: {json.dumps(result, indent=2)}")
+
+            try:
+                # Controlla se la risposta è stata bloccata per motivi di sicurezza
+                if not result.get('candidates'):
+                    feedback = result.get('promptFeedback', {})
+                    block_reason = feedback.get('blockReason', 'Unknown')
+                    safety_ratings = feedback.get('safetyRatings', [])
+                    print(f"AI Response Blocked. Reason: {block_reason}, Ratings: {safety_ratings}")
+                    return jsonify({'success': False, 'error': f'Response blocked for safety reasons: {block_reason}'})
+
+                # Estrai il testo in modo sicuro
+                ai_response = result['candidates'][0]['content']['parts'][0]['text'].strip()
+
+                # Il controllo cruciale: il testo è valido?
+                if ai_response:
+                    return jsonify({'success': True, 'response': ai_response})
+                else:
+                    # Se il testo è vuoto, è un errore
+                    print("Error: AI returned a successful response but with empty text.")
+                    return jsonify({'success': False, 'error': 'AI generated an empty response.'})
+            
+            except (KeyError, IndexError):
+                # Se la struttura del JSON è inaspettata
+                print(f"Error: Could not parse the expected structure from Gemini response.")
+                return jsonify({'success': False, 'error': 'Failed to parse AI response structure.'})
+        else:
+            # Se la chiamata API fallisce con un codice di errore
+            print(f"API Error: Status {response.status_code}, Body: {response.text}")
+            return jsonify({'success': False, 'error': f'API Error: {response.status_code}'})
 
     except Exception as e:
         print(f"💥 Final generation error: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
-
 @app.errorhandler(404)
 def not_found(error): return jsonify({'error': 'Endpoint not found'}), 404
 @app.errorhandler(500)
