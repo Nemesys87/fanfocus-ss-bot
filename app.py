@@ -103,13 +103,15 @@ def generate_response():
 
 # SOSTITUISCI LA VECCHIA FUNZIONE CON QUESTA NUOVA VERSIONE PIÙ ROBUSTA
 
+# SOSTITUISCI L'INTERA FUNZIONE CON QUESTA VERSIONE "A PROVA DI BOMBA"
+
 def generate_enhanced_response(creator, fan_message, strategy_analysis):
     """
-    Generate response con focus sulla monetizzazione e con una gestione degli errori molto più robusta.
+    Generate response con una gestione iper-robusta degli errori e dei diversi formati di risposta di Gemini.
     """
     try:
         api_key = os.environ.get('GOOGLE_AI_API_KEY')
-        if not api_key: 
+        if not api_key:
             return jsonify({'success': False, 'error': 'API key not configured'}), 500
         
         prompt = f"""You are an elite OnlyFans chatter for 'Saints & Sinners'. Your persona is '{creator}'.
@@ -124,7 +126,7 @@ YOUR TASK: Generate a response that PERFECTLY executes the directive with your a
         headers = {'Content-Type': 'application/json'}
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": { "maxOutputTokens": 300, "temperature": 0.8, "topK": 40, "topP": 0.95 },
+            "generationConfig": {"maxOutputTokens": 300, "temperature": 0.8, "topK": 40, "topP": 0.95},
             "safetySettings": [
                 {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
                 {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
@@ -135,42 +137,49 @@ YOUR TASK: Generate a response that PERFECTLY executes the directive with your a
         
         response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}", headers=headers, json=payload, timeout=120)
         
-        # NUOVA LOGICA DI CONTROLLO ROBUSTA
         if response.status_code == 200:
             result = response.json()
-            
-            # Log per il debug, così vediamo sempre cosa risponde Google
+            # Log cruciale per il debug
             print(f"Gemini Raw Response: {json.dumps(result, indent=2)}")
 
+            # CONTROLLO IPER-ROBUSTO DELLA RISPOSTA
             try:
-                # Controlla se la risposta è stata bloccata per motivi di sicurezza
-                if not result.get('candidates'):
+                # Caso 1: La risposta è stata bloccata dai filtri di sicurezza
+                if 'candidates' not in result or not result.get('candidates'):
                     feedback = result.get('promptFeedback', {})
                     block_reason = feedback.get('blockReason', 'Unknown')
-                    safety_ratings = feedback.get('safetyRatings', [])
-                    print(f"AI Response Blocked. Reason: {block_reason}, Ratings: {safety_ratings}")
-                    return jsonify({'success': False, 'error': f'Response blocked for safety reasons: {block_reason}'})
+                    print(f"AI Response Blocked. Reason: {block_reason}")
+                    return jsonify({'success': False, 'error': f'Response blocked by safety filter: {block_reason}'})
 
-                # Estrai il testo in modo sicuro
-                ai_response = result['candidates'][0]['content']['parts'][0]['text'].strip()
+                # Caso 2: La risposta ha un candidato ma non ha testo
+                candidate = result['candidates'][0]
+                content_parts = candidate.get('content', {}).get('parts', [])
+                
+                if not content_parts or 'text' not in content_parts[0]:
+                    print("Error: Valid candidate received but no text part found.")
+                    return jsonify({'success': False, 'error': 'AI response structure was valid but contained no text.'})
+                
+                ai_response = content_parts[0]['text'].strip()
 
-                # Il controllo cruciale: il testo è valido?
+                # Caso 3: Il testo è vuoto
                 if ai_response:
                     return jsonify({'success': True, 'response': ai_response})
                 else:
-                    # Se il testo è vuoto, è un errore
-                    print("Error: AI returned a successful response but with empty text.")
+                    print("Error: AI returned a successful response but with an empty text string.")
                     return jsonify({'success': False, 'error': 'AI generated an empty response.'})
-            
-            except (KeyError, IndexError):
-                # Se la struttura del JSON è inaspettata
-                print(f"Error: Could not parse the expected structure from Gemini response.")
+
+            except (KeyError, IndexError, TypeError) as e:
+                # Caso 4: Qualsiasi altra struttura inaspettata
+                print(f"Error: Could not parse the expected structure from Gemini response. Exception: {e}")
                 return jsonify({'success': False, 'error': 'Failed to parse AI response structure.'})
         else:
-            # Se la chiamata API fallisce con un codice di errore
+            # Errore nella chiamata API
             print(f"API Error: Status {response.status_code}, Body: {response.text}")
             return jsonify({'success': False, 'error': f'API Error: {response.status_code}'})
 
+    except Exception as e:
+        print(f"💥 Final generation error: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
     except Exception as e:
         print(f"💥 Final generation error: {str(e)}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
