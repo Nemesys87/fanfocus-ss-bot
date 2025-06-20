@@ -743,41 +743,7 @@ def get_ss_psychological_guidance(analysis):
     if analysis['spending_signals']:
         guidance.append(f"SPENDING OPPORTUNITY: Detected {analysis['spending_signals']} - Use PRIMING + FANTASY + OFFER approach")
     
-    # KYC
-    def get_ss_psychological_guidance(analysis):
-    """Get specific S&S psychological guidance based on analysis"""
-    guidance = []
     
-    # Emotional state guidance
-    emotional_state = analysis['emotional_state']
-    if emotional_state['state'] != 'neutral':
-        guidance.append(f"EMOTIONAL STATE: Fan is {emotional_state['state']} - {emotional_state['strategy']}")
-    
-    # Spending signals guidance
-    if analysis['spending_signals']:
-        guidance.append(f"SPENDING OPPORTUNITY: Detected {analysis['spending_signals']} - Use PRIMING + FANTASY + OFFER approach")
-    
-    # KYC opportunities guidance
-    if analysis['kyc_opportunities']:
-        guidance.append(f"KYC OPPORTUNITIES: {analysis['kyc_opportunities']} - Apply 80/20 rule and I-Too technique")
-    
-    # Personality-specific guidance
-    personality = analysis['fan_personality']
-    if personality != 'BALANCED':
-        personality_info = FAN_PERSONALITIES.get(personality, {})
-        guidance.append(f"PERSONALITY ADAPTATION: Fan is {personality} - Use {personality_info.get('response_style', 'balanced')} approach")
-    
-    # Situation-specific S&S techniques
-    situation = analysis['situation']
-    if situation == 'kyc_collect':
-        guidance.append("KYC FOCUS: Use natural curiosity, compliments, and I-Too technique to gather information")
-    elif situation == 'vip_treatment':
-        guidance.append("VIP FOCUS: Leverage special relationship for emotional financial requests")
-    elif situation == 'building_relationship':
-        guidance.append("RELATIONSHIP FOCUS: Apply friend philosophy - genuine care and emotional rollercoaster")
-    
-    return "\n".join(guidance) if guidance else "GENERAL S&S APPROACH: Apply friend philosophy and emotional intelligence"
-
 @app.route('/api/test_ai')
 def test_ai():
     """Test API endpoint"""
@@ -809,7 +775,6 @@ def test_ai():
         
     except Exception as e:
         return jsonify({'error': str(e)})
-
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Endpoint not found'}), 404
