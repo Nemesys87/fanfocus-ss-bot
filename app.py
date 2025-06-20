@@ -5,9 +5,13 @@ import json
 from datetime import datetime
 import re
 import time
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'fanfocus-ss-enhanced'
+
+# Request deduplication system
+recent_requests = {}
 
 # Saints & Sinners Enhanced Framework with Advanced Psychology
 SS_SITUATIONS = {
@@ -203,7 +207,6 @@ FAN_PERSONALITIES = {
         'emotional_state_clues': ['boundary pushing', 'thrill seeking', 'taboo interest']
     }
 }
-
 # Advanced KYC System (80/20 Rule)
 ADVANCED_KYC_SYSTEM = {
     'information_priority': {
@@ -316,6 +319,234 @@ PSYCHOLOGICAL_FRAMEWORK = {
     }
 }
 
+# Advanced Multi-Technique KYC System (S&S Framework)
+ADVANCED_MULTI_TECHNIQUE_KYC = {
+    'name_collection': {
+        'techniques': {
+            'computer_screen_power_move': {
+                'script': "Look who I have on my screen! 😍 What should I call you?",
+                'personality_match': ['HIGH_ROLLER', 'PRAISE_SEEKER', 'COLLECTOR'],
+                'emotional_state_match': ['excited', 'neutral'],
+                'confidence_level': 'high'
+            },
+            'weird_username_technique': {
+                'script': "I feel weird calling you by username... what's your real name, babe?",
+                'personality_match': ['ROMANTIC_DREAMER', 'SHY_SUBMISSIVE'],
+                'emotional_state_match': ['lonely', 'neutral'],
+                'confidence_level': 'medium'
+            },
+            'intimate_connection': {
+                'script': "I want to know the real you behind the screen... what should I call you? 💕",
+                'personality_match': ['ROMANTIC_DREAMER', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['horny', 'lonely'],
+                'confidence_level': 'high'
+            },
+            'curious_personal_interest': {
+                'script': "I love talking with you... what should I call you, handsome?",
+                'personality_match': ['BANTER_BUDDY', 'BALANCED'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'medium'
+            },
+            'brazilian_warmth': {
+                'script': "Oi! What should this Brazilian girl call you? 💕",
+                'personality_match': ['ROMANTIC_DREAMER', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['excited', 'neutral'],
+                'confidence_level': 'medium',
+                'creator_specific': 'ella'
+            },
+            'confident_direct': {
+                'script': "I'm curious about the man I'm talking to... what's your name?",
+                'personality_match': ['HIGH_ROLLER', 'SHOCK_CHASER'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'high',
+                'creator_specific': 'vanp'
+            },
+            'artistic_curiosity': {
+                'script': "I love creating connections with real people... what should I call you?",
+                'personality_match': ['ROMANTIC_DREAMER', 'BANTER_BUDDY'],
+                'emotional_state_match': ['neutral', 'lonely'],
+                'confidence_level': 'medium',
+                'creator_specific': 'yana'
+            },
+            'latina_warmth': {
+                'script': "Hola! What should I call you, mi amor? 💕",
+                'personality_match': ['ROMANTIC_DREAMER', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['excited', 'neutral'],
+                'confidence_level': 'medium',
+                'creator_specific': 'venessa'
+            }
+        }
+    },
+    'location_country': {
+        'techniques': {
+            'accent_compliment_method': {
+                'script': "That voice/accent is so sexy! Where are you from, handsome?",
+                'personality_match': ['PRAISE_SEEKER', 'ROMANTIC_DREAMER'],
+                'emotional_state_match': ['horny', 'excited'],
+                'confidence_level': 'high'
+            },
+            'cultural_curiosity': {
+                'script': "I'm so curious about different places... where in the world are you?",
+                'personality_match': ['BANTER_BUDDY', 'COLLECTOR'],
+                'emotional_state_match': ['neutral', 'bored'],
+                'confidence_level': 'medium'
+            },
+            'travel_dreams': {
+                'script': "I love dreaming about traveling... what's your beautiful city like?",
+                'personality_match': ['ROMANTIC_DREAMER', 'SHY_SUBMISSIVE'],
+                'emotional_state_match': ['lonely', 'neutral'],
+                'confidence_level': 'medium'
+            },
+            'time_zone_play': {
+                'script': "What time is it where you are? I want to know when's best to message you 😊",
+                'personality_match': ['ROMANTIC_DREAMER', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['lonely', 'excited'],
+                'confidence_level': 'medium'
+            },
+            'brazilian_travel': {
+                'script': "I dream of visiting different countries... where are you from, amor?",
+                'personality_match': ['ROMANTIC_DREAMER', 'BALANCED'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'medium',
+                'creator_specific': 'ella'
+            },
+            'confident_geography': {
+                'script': "I can tell you're not from around here... where's home for you?",
+                'personality_match': ['HIGH_ROLLER', 'BANTER_BUDDY'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'high',
+                'creator_specific': 'vanp'
+            }
+        }
+    },
+    'job_age': {
+        'techniques': {
+            'sophistication_compliment': {
+                'script': "You seem so sophisticated! What do you do that keeps you so busy?",
+                'personality_match': ['HIGH_ROLLER', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'high'
+            },
+            'success_recognition': {
+                'script': "You have such successful energy... what field are you conquering?",
+                'personality_match': ['HIGH_ROLLER', 'SHOCK_CHASER'],
+                'emotional_state_match': ['excited', 'neutral'],
+                'confidence_level': 'high'
+            },
+            'intelligence_compliment': {
+                'script': "You're so smart and interesting... what do you do for work?",
+                'personality_match': ['PRAISE_SEEKER', 'ROMANTIC_DREAMER'],
+                'emotional_state_match': ['neutral', 'lonely'],
+                'confidence_level': 'medium'
+            },
+            'schedule_curiosity': {
+                'script': "When are you usually free to chat? What's your day like?",
+                'personality_match': ['ROMANTIC_DREAMER', 'SHY_SUBMISSIVE'],
+                'emotional_state_match': ['lonely', 'neutral'],
+                'confidence_level': 'medium'
+            },
+            'artistic_professional': {
+                'script': "You seem like someone with a creative or interesting career... am I right?",
+                'personality_match': ['BANTER_BUDDY', 'ROMANTIC_DREAMER'],
+                'emotional_state_match': ['neutral', 'bored'],
+                'confidence_level': 'medium',
+                'creator_specific': 'yana'
+            }
+        }
+    },
+    'interests_hobbies': {
+        'techniques': {
+            'passion_exploration': {
+                'script': "What's your biggest passion outside work? I love learning what drives people 💕",
+                'personality_match': ['ROMANTIC_DREAMER', 'COLLECTOR'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'high'
+            },
+            'weekend_curiosity': {
+                'script': "What do you love doing on weekends? I bet it's something fun!",
+                'personality_match': ['BANTER_BUDDY', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['bored', 'neutral'],
+                'confidence_level': 'medium'
+            },
+            'escape_question': {
+                'script': "What do you do to unwind and forget about stress?",
+                'personality_match': ['SHY_SUBMISSIVE', 'BALANCED'],
+                'emotional_state_match': ['stressed', 'lonely'],
+                'confidence_level': 'medium'
+            },
+            'dream_discovery': {
+                'script': "What's something you've always dreamed of trying? I love dreamers 😊",
+                'personality_match': ['ROMANTIC_DREAMER', 'SHOCK_CHASER'],
+                'emotional_state_match': ['lonely', 'excited'],
+                'confidence_level': 'medium'
+            },
+            'gaming_probe': {
+                'script': "Do you play any games or have hobbies? I'm always curious about what people are into 🎮",
+                'personality_match': ['BANTER_BUDDY', 'COLLECTOR'],
+                'emotional_state_match': ['bored', 'neutral'],
+                'confidence_level': 'medium',
+                'creator_specific': 'venessa'
+            }
+        }
+    },
+    'spending_capacity': {
+        'techniques': {
+            'lifestyle_assessment': {
+                'script': "You have such refined taste... you must enjoy the finer things in life",
+                'personality_match': ['HIGH_ROLLER', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'high'
+            },
+            'quality_recognition': {
+                'script': "You seem like someone who appreciates quality over quantity",
+                'personality_match': ['HIGH_ROLLER', 'COLLECTOR'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'high'
+            },
+            'success_indicators': {
+                'script': "You have that successful, sophisticated vibe... I can tell you work hard",
+                'personality_match': ['HIGH_ROLLER', 'PRAISE_SEEKER'],
+                'emotional_state_match': ['excited', 'neutral'],
+                'confidence_level': 'medium'
+            },
+            'taste_compliment': {
+                'script': "Your style and way of talking shows you know good things when you see them",
+                'personality_match': ['PRAISE_SEEKER', 'ROMANTIC_DREAMER'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'medium'
+            }
+        }
+    },
+    'relationship_status': {
+        'techniques': {
+            'gentle_inquiry': {
+                'script': "Are you seeing anyone special right now? Just curious about you 😊",
+                'personality_match': ['ROMANTIC_DREAMER', 'SHY_SUBMISSIVE'],
+                'emotional_state_match': ['lonely', 'neutral'],
+                'confidence_level': 'medium'
+            },
+            'availability_probe': {
+                'script': "When do you have time for yourself and things you enjoy?",
+                'personality_match': ['BALANCED', 'BANTER_BUDDY'],
+                'emotional_state_match': ['stressed', 'neutral'],
+                'confidence_level': 'low'
+            },
+            'care_question': {
+                'script': "Who takes care of you when you're stressed or need support?",
+                'personality_match': ['ROMANTIC_DREAMER', 'SHY_SUBMISSIVE'],
+                'emotional_state_match': ['stressed', 'lonely'],
+                'confidence_level': 'high'
+            },
+            'freedom_check': {
+                'script': "Are you free to chat and be yourself whenever you want?",
+                'personality_match': ['SHOCK_CHASER', 'HIGH_ROLLER'],
+                'emotional_state_match': ['neutral', 'excited'],
+                'confidence_level': 'medium'
+            }
+        }
+    }
+}
+
 # Enhanced Business Mindset Guidelines
 MINDSET_GUIDELINES = """
 S&S PSYCHOLOGICAL PRINCIPLES:
@@ -328,7 +559,6 @@ S&S PSYCHOLOGICAL PRINCIPLES:
 • Loyalty First - Build unshakeable loyalty over immediate sales
 • Advanced Profiling - Learn more about him than he learns about you
 """
-
 @app.route('/')
 def index():
     """Main page"""
@@ -339,6 +569,25 @@ def generate_response():
     """Generate AI response with S&S psychological intelligence"""
     try:
         data = request.get_json()
+        
+        # Request deduplication protection
+        request_hash = hashlib.md5(json.dumps(data, sort_keys=True).encode()).hexdigest()
+        current_time = time.time()
+        
+        # Check for duplicate requests within 5 seconds
+        if request_hash in recent_requests:
+            if current_time - recent_requests[request_hash] < 5:
+                print(f"🚫 Duplicate request blocked: {request_hash}")
+                return jsonify({'success': False, 'error': 'Duplicate request blocked'}), 429
+        
+        # Register this request
+        recent_requests[request_hash] = current_time
+        
+        # Cleanup old requests (keep only last 60 seconds)
+        cutoff_time = current_time - 60
+        global recent_requests
+        recent_requests = {k: v for k, v in recent_requests.items() if v > cutoff_time}
+        
         print(f"✅ S&S Psychological Request: {data}")
         
         if not data:
@@ -494,6 +743,123 @@ def assess_kyc_opportunities(message_lower, situation, submenu):
     
     return opportunities
 
+def select_optimal_kyc_technique(kyc_type, fan_personality, emotional_state, creator):
+    """Select the best KYC technique based on fan profile and creator"""
+    
+    if kyc_type not in ADVANCED_MULTI_TECHNIQUE_KYC:
+        return None
+    
+    techniques = ADVANCED_MULTI_TECHNIQUE_KYC[kyc_type]['techniques']
+    scored_techniques = []
+    
+    for technique_name, technique_data in techniques.items():
+        score = 0
+        
+        # Check creator compatibility
+        if 'creator_specific' in technique_data:
+            if technique_data['creator_specific'] == creator:
+                score += 50  # Boost for creator-specific techniques
+            else:
+                continue  # Skip if not for this creator
+        else:
+            score += 20  # Bonus for universal techniques
+        
+        # Personality match scoring
+        if fan_personality in technique_data['personality_match']:
+            score += 30
+        elif 'BALANCED' in technique_data['personality_match']:
+            score += 10
+        
+        # Emotional state match scoring
+        if emotional_state in technique_data['emotional_state_match']:
+            score += 20
+        
+        # Confidence level preference (higher is better for clear situations)
+        confidence_scores = {'high': 15, 'medium': 10, 'low': 5}
+        score += confidence_scores.get(technique_data['confidence_level'], 0)
+        
+        scored_techniques.append({
+            'name': technique_name,
+            'data': technique_data,
+            'score': score
+        })
+    
+    # Sort by score and return best technique
+    if scored_techniques:
+        best_technique = max(scored_techniques, key=lambda x: x['score'])
+        print(f"🎯 Selected KYC Technique: {best_technique['name']} (Score: {best_technique['score']}) for {creator}")
+        return best_technique['data']
+    
+    return None
+
+def get_enhanced_kyc_guidance(analysis, creator):
+    """Get enhanced KYC guidance with optimal technique selection"""
+    
+    situation = analysis['situation']
+    submenu = analysis.get('submenu')
+    
+    if situation == 'kyc_collect' and submenu:
+        # Get fan profile
+        fan_personality = analysis['fan_personality']
+        emotional_state = analysis['emotional_state']['state']
+        
+        # Select optimal technique
+        optimal_technique = select_optimal_kyc_technique(submenu, fan_personality, emotional_state, creator)
+        
+        if optimal_technique:
+            script = optimal_technique['script']
+            confidence = optimal_technique['confidence_level']
+            
+            guidance = f"""🎯 OPTIMAL KYC TECHNIQUE SELECTED:
+TARGET: {submenu.replace('_', ' ').title()}
+SCRIPT: "{script}"
+CONFIDENCE: {confidence.upper()}
+CREATOR: {creator.upper()}
+
+EXECUTION: Use this exact approach for maximum effectiveness with this fan type."""
+            
+            return guidance
+    
+    return None
+
+def get_ss_psychological_guidance_with_creator(analysis, creator):
+    """Enhanced S&S guidance with creator-specific multi-technique KYC"""
+    guidance = []
+    
+    # PRIORITÀ 1: Enhanced KYC with multi-technique selection
+    enhanced_kyc = get_enhanced_kyc_guidance(analysis, creator)
+    if enhanced_kyc:
+        guidance.append(enhanced_kyc)
+    
+    # PRIORITÀ 2: Spending signals guidance
+    if analysis['spending_signals']:
+        if 'money_mention' in analysis['spending_signals'] and 'special_treatment' in analysis['spending_signals']:
+            guidance.append("🚨 CRITICAL OPPORTUNITY: Fan explicitly offering financial help + wants special treatment! IMMEDIATELY respond with emotional financial request. Use format: 'You're so sweet! Actually, I've been [specific need]... could you help me out?'")
+        else:
+            guidance.append(f"SPENDING OPPORTUNITY: Detected {analysis['spending_signals']} - Use PRIMING + FANTASY + OFFER approach")
+    
+    # PRIORITÀ 3: Emotional state guidance
+    emotional_state = analysis['emotional_state']
+    if emotional_state['state'] != 'neutral':
+        guidance.append(f"EMOTIONAL STATE: Fan is {emotional_state['state']} - {emotional_state['strategy']}")
+    
+    # PRIORITÀ 4: Personality-specific guidance
+    personality = analysis['fan_personality']
+    if personality != 'BALANCED':
+        personality_info = FAN_PERSONALITIES.get(personality, {})
+        if personality == 'ROMANTIC_DREAMER':
+            guidance.append(f"ROMANTIC DREAMER APPROACH: Use emotional language, relationship terminology, make him feel like caring boyfriend")
+        else:
+            guidance.append(f"PERSONALITY ADAPTATION: Fan is {personality} - Use {personality_info.get('response_style', 'balanced')} approach")
+    
+    # PRIORITÀ 5: Situation-specific S&S techniques
+    situation = analysis['situation']
+    if situation == 'vip_treatment':
+        guidance.append("🎯 VIP TREATMENT CRITICAL: This fan wants special relationship treatment. If he offers money, ACCEPT with specific emotional reason.")
+    elif situation == 'building_relationship':
+        guidance.append("RELATIONSHIP FOCUS: Apply friend philosophy - genuine care and emotional rollercoaster")
+    
+    return "\n".join(guidance) if guidance else "GENERAL S&S APPROACH: Apply friend philosophy and emotional intelligence"
 def generate_ss_psychological_response(creator, situation, submenu, fan_message, analysis, examples, modify):
     """Generate response with S&S psychological intelligence"""
     try:
@@ -514,8 +880,8 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 1000000000,
-                "temperature": 0.8,
+                "maxOutputTokens": 2048,
+                "temperature": 0.75,
                 "topK": 30,
                 "topP": 0.9
             }
@@ -527,10 +893,10 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
         for attempt in range(max_retries + 1):
             try:
                 response = requests.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
                     headers=headers,
                     json=payload,
-                    timeout=240
+                    timeout=60
                 )
                 
                 if response.status_code == 200:
@@ -565,7 +931,7 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
                                             'kyc_opportunities': analysis['kyc_opportunities']
                                         },
                                         'analytics': {
-                                            'model_used': 'gemini-2.5-flash',
+                                            'model_used': 'gemini-2.5-pro',
                                             'attempts_made': attempt + 1,
                                             'finish_reason': finish_reason,
                                             'ss_psychology_applied': True,
@@ -598,7 +964,7 @@ def create_ss_ella_prompt(fan_message, situation, submenu, analysis, examples, m
     base_personality = """You are Ella, an OnlyFans creator applying S&S psychological intelligence.
 Your goal is to build genuine friendship while achieving business objectives."""
     
-    ss_psychology = get_ss_psychological_guidance(analysis)
+    ss_psychology = get_ss_psychological_guidance_with_creator(analysis, 'ella')
     
     return f"""{base_personality}
 
@@ -633,7 +999,7 @@ def create_ss_vanp_prompt(fan_message, situation, submenu, analysis, examples, m
     base_personality = """You are Vanp, an OnlyFans creator applying S&S psychological intelligence.
 Your confidence is natural, but you always prioritize emotional connection."""
     
-    ss_psychology = get_ss_psychological_guidance(analysis)
+    ss_psychology = get_ss_psychological_guidance_with_creator(analysis, 'vanp')
     
     return f"""{base_personality}
 
@@ -667,7 +1033,7 @@ def create_ss_yana_prompt(fan_message, situation, submenu, analysis, examples, m
     base_personality = """You are Yana, an OnlyFans creator applying S&S psychological intelligence.
 Your thoughtfulness enhances emotional connection building."""
     
-    ss_psychology = get_ss_psychological_guidance(analysis)
+    ss_psychology = get_ss_psychological_guidance_with_creator(analysis, 'yana')
     
     return f"""{base_personality}
 
@@ -701,7 +1067,7 @@ def create_ss_venessa_prompt(fan_message, situation, submenu, analysis, examples
     base_personality = """You are Venessa, an OnlyFans creator applying S&S psychological intelligence.
 Your warmth creates powerful emotional bonds."""
     
-    ss_psychology = get_ss_psychological_guidance(analysis)
+    ss_psychology = get_ss_psychological_guidance_with_creator(analysis, 'venessa')
     
     return f"""{base_personality}
 
@@ -730,38 +1096,6 @@ S&S EXECUTION RULES:
 
 Execute with S&S psychological intelligence and genuine warmth."""
 
-def get_ss_psychological_guidance(analysis):
-    """Get specific S&S psychological guidance based on analysis"""
-    guidance = []
-    
-    # Emotional state guidance
-    emotional_state = analysis['emotional_state']
-    if emotional_state['state'] != 'neutral':
-        guidance.append(f"EMOTIONAL STATE: Fan is {emotional_state['state']} - {emotional_state['strategy']}")
-    
-    # Spending signals guidance
-    if analysis['spending_signals']:
-        guidance.append(f"SPENDING OPPORTUNITY: Detected {analysis['spending_signals']} - Use PRIMING + FANTASY + OFFER approach")
-     # KYC opportunities guidance
-    if analysis['kyc_opportunities']:
-        guidance.append(f"KYC OPPORTUNITIES: {analysis['kyc_opportunities']} - Apply 80/20 rule and I-Too technique")
-    
-    # Personality-specific guidance
-    personality = analysis['fan_personality']
-    if personality != 'BALANCED':
-        personality_info = FAN_PERSONALITIES.get(personality, {})
-        guidance.append(f"PERSONALITY ADAPTATION: Fan is {personality} - Use {personality_info.get('response_style', 'balanced')} approach")
-    
-    # Situation-specific S&S techniques
-    situation = analysis['situation']
-    if situation == 'kyc_collect':
-        guidance.append("KYC FOCUS: Use natural curiosity, compliments, and I-Too technique to gather information")
-    elif situation == 'vip_treatment':
-        guidance.append("VIP FOCUS: Leverage special relationship for emotional financial requests")
-    elif situation == 'building_relationship':
-        guidance.append("RELATIONSHIP FOCUS: Apply friend philosophy - genuine care and emotional rollercoaster")
-    
-    return "\n".join(guidance) if guidance else "GENERAL S&S APPROACH: Apply friend philosophy and emotional intelligence"
 @app.route('/api/test_ai')
 def test_ai():
     """Test API endpoint"""
@@ -771,28 +1105,37 @@ def test_ai():
         return jsonify({
             'status': 'OK',
             'api_key_present': bool(api_key),
-            'model': 'gemini-2.5-flash (S&S Psychological Intelligence)',
-            'framework': 'Saints & Sinners - Advanced KYC + Psychological Framework',
+            'model': 'gemini-2.5-pro (S&S Psychological Intelligence)',
+            'framework': 'Saints & Sinners - Advanced KYC + Multi-Technique System',
             'features': [
                 'S&S Friend Philosophy Integration',
                 '80/20 Rule Conversation Management',
                 'Advanced Emotional State Reading',
                 'I-Too Technique Implementation', 
+                'Multi-Technique KYC System',
+                'Creator-Specific Technique Selection',
                 'Psychological Spending Signal Detection',
                 'Natural KYC Opportunity Recognition',
                 'Emotional Rollercoaster Technique',
-                'PRIMING + FANTASY + OFFER Sales Psychology'
+                'PRIMING + FANTASY + OFFER Sales Psychology',
+                'Request Deduplication Protection'
             ],
-            'psychological_framework': {
+            'multi_technique_system': {
+                'kyc_categories': len(ADVANCED_MULTI_TECHNIQUE_KYC),
+                'total_techniques': sum(len(cat['techniques']) for cat in ADVANCED_MULTI_TECHNIQUE_KYC.values()),
+                'creator_specific_techniques': sum(
+                    len([t for t in cat['techniques'].values() if 'creator_specific' in t])
+                    for cat in ADVANCED_MULTI_TECHNIQUE_KYC.values()
+                ),
                 'emotional_states_tracked': len(PSYCHOLOGICAL_FRAMEWORK['emotional_intelligence']['reading_emotional_state']),
-                'kyc_techniques_available': len(ADVANCED_KYC_SYSTEM['connection_techniques']),
                 'fan_personalities_supported': len(FAN_PERSONALITIES)
             },
-            'system_status': 'ss_psychological_intelligence_optimized'
+            'system_status': 'ss_multi_technique_psychological_intelligence_optimized'
         })
         
     except Exception as e:
         return jsonify({'error': str(e)})
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Endpoint not found'}), 404
@@ -805,14 +1148,25 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     
     if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production':
-        print("🚀 Saints & Sinners FanFocus - S&S PSYCHOLOGICAL INTELLIGENCE")
+        print("🚀 Saints & Sinners FanFocus - MULTI-TECHNIQUE PSYCHOLOGICAL INTELLIGENCE")
         print("🧠 Advanced KYC: 80/20 Rule + I-Too Technique + Wikipedia Trick")
+        print("🎯 Multi-Technique System: Dynamic technique selection per creator+personality")
         print("💭 Emotional Intelligence: Real-time state reading + Rollercoaster technique")
-        print("🎯 Friend Philosophy: Member = Friend approach integrated")
+        print("🎭 Friend Philosophy: Member = Friend approach integrated")
         print("💰 Sales Psychology: PRIMING + FANTASY + OFFER (never direct selling)")
+        print("🛡️ Request Protection: Duplicate request blocking enabled")
         print("📊 Enhanced Analytics: Emotional states, spending signals, KYC opportunities")
-        print("💎 Gemini 2.5 flash: Maximum psychological intelligence")
-        print("🔬 Professional S&S Framework - Psychological Mastery Optimized")
+        print("💎 Gemini 2.5 Pro: Maximum psychological intelligence")
+        print("🔬 Professional S&S Framework - Multi-Technique Mastery Optimized")
+        
+        # Print technique statistics
+        total_techniques = sum(len(cat['techniques']) for cat in ADVANCED_MULTI_TECHNIQUE_KYC.values())
+        creator_specific = sum(
+            len([t for t in cat['techniques'].values() if 'creator_specific' in t])
+            for cat in ADVANCED_MULTI_TECHNIQUE_KYC.values()
+        )
+        print(f"📈 System Stats: {total_techniques} total techniques, {creator_specific} creator-specific")
+        
     else:
-        print("🔧 Development Mode - S&S Psychological Intelligence Testing")
+        print("🔧 Development Mode - Multi-Technique S&S Intelligence Testing")
         app.run(host='0.0.0.0', port=port, debug=True)
