@@ -514,8 +514,8 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 2048,
-                "temperature": 0.75,
+                "maxOutputTokens": 8192,
+                "temperature": 0.8,
                 "topK": 30,
                 "topP": 0.9
             }
