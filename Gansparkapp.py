@@ -527,7 +527,7 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
         for attempt in range(max_retries + 1):
             try:
                 response = requests.post(
-                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}",
                     headers=headers,
                     json=payload,
                     timeout=240
@@ -565,7 +565,7 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
                                             'kyc_opportunities': analysis['kyc_opportunities']
                                         },
                                         'analytics': {
-                                            'model_used': 'gemini-2.5-pro',
+                                            'model_used': 'gemini-2.5-flash',
                                             'attempts_made': attempt + 1,
                                             'finish_reason': finish_reason,
                                             'ss_psychology_applied': True,
@@ -771,7 +771,7 @@ def test_ai():
         return jsonify({
             'status': 'OK',
             'api_key_present': bool(api_key),
-            'model': 'gemini-2.5-pro (S&S Psychological Intelligence)',
+            'model': 'gemini-2.5-flash (S&S Psychological Intelligence)',
             'framework': 'Saints & Sinners - Advanced KYC + Psychological Framework',
             'features': [
                 'S&S Friend Philosophy Integration',
@@ -811,7 +811,7 @@ if __name__ == '__main__':
         print("🎯 Friend Philosophy: Member = Friend approach integrated")
         print("💰 Sales Psychology: PRIMING + FANTASY + OFFER (never direct selling)")
         print("📊 Enhanced Analytics: Emotional states, spending signals, KYC opportunities")
-        print("💎 Gemini 2.5 Pro: Maximum psychological intelligence")
+        print("💎 Gemini 2.5 flash: Maximum psychological intelligence")
         print("🔬 Professional S&S Framework - Psychological Mastery Optimized")
     else:
         print("🔧 Development Mode - S&S Psychological Intelligence Testing")
