@@ -530,7 +530,7 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
                     f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
                     headers=headers,
                     json=payload,
-                    timeout=60
+                    timeout=90
                 )
                 
                 if response.status_code == 200:
