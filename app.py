@@ -5,13 +5,9 @@ import json
 from datetime import datetime
 import re
 import time
-import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'fanfocus-ss-enhanced'
-
-# Request deduplication system
-recent_requests = {}
 
 # Saints & Sinners Enhanced Framework with Advanced Psychology
 SS_SITUATIONS = {
@@ -244,8 +240,8 @@ ADVANCED_KYC_SYSTEM = {
         }
     },
     'conversation_ratio': {
-        'questions_about_him': 80,  # 80% focus on fan
-        'sharing_about_creator': 20  # 20% relatable experiences
+        'questions_about_him': 80,
+        'sharing_about_creator': 20
     },
     'connection_techniques': {
         'i_too_method': {
@@ -569,25 +565,6 @@ def generate_response():
     """Generate AI response with S&S psychological intelligence"""
     try:
         data = request.get_json()
-        
-        # Request deduplication protection
-        request_hash = hashlib.md5(json.dumps(data, sort_keys=True).encode()).hexdigest()
-        current_time = time.time()
-        
-        # Check for duplicate requests within 5 seconds
-        if request_hash in recent_requests:
-            if current_time - recent_requests[request_hash] < 5:
-                print(f"🚫 Duplicate request blocked: {request_hash}")
-                return jsonify({'success': False, 'error': 'Duplicate request blocked'}), 429
-        
-        # Register this request
-        recent_requests[request_hash] = current_time
-        
-        # Cleanup old requests (keep only last 60 seconds)
-        cutoff_time = current_time - 60
-        global recent_requests
-        recent_requests = {k: v for k, v in recent_requests.items() if v > cutoff_time}
-        
         print(f"✅ S&S Psychological Request: {data}")
         
         if not data:
@@ -720,8 +697,6 @@ def assess_kyc_opportunities(message_lower, situation, submenu):
     
     # If already in KYC situation, identify specific info to gather
     if situation == 'kyc_collect':
-        kyc_info = ADVANCED_KYC_SYSTEM['information_priority']
-        
         if submenu == 'name_collection':
             opportunities.append('apply_curious_personal_interest_technique')
         elif submenu == 'location_country':
@@ -774,7 +749,7 @@ def select_optimal_kyc_technique(kyc_type, fan_personality, emotional_state, cre
         if emotional_state in technique_data['emotional_state_match']:
             score += 20
         
-        # Confidence level preference (higher is better for clear situations)
+        # Confidence level preference
         confidence_scores = {'high': 15, 'medium': 10, 'low': 5}
         score += confidence_scores.get(technique_data['confidence_level'], 0)
         
@@ -1117,8 +1092,7 @@ def test_ai():
                 'Psychological Spending Signal Detection',
                 'Natural KYC Opportunity Recognition',
                 'Emotional Rollercoaster Technique',
-                'PRIMING + FANTASY + OFFER Sales Psychology',
-                'Request Deduplication Protection'
+                'PRIMING + FANTASY + OFFER Sales Psychology'
             ],
             'multi_technique_system': {
                 'kyc_categories': len(ADVANCED_MULTI_TECHNIQUE_KYC),
@@ -1154,7 +1128,6 @@ if __name__ == '__main__':
         print("💭 Emotional Intelligence: Real-time state reading + Rollercoaster technique")
         print("🎭 Friend Philosophy: Member = Friend approach integrated")
         print("💰 Sales Psychology: PRIMING + FANTASY + OFFER (never direct selling)")
-        print("🛡️ Request Protection: Duplicate request blocking enabled")
         print("📊 Enhanced Analytics: Emotional states, spending signals, KYC opportunities")
         print("💎 Gemini 2.5 Pro: Maximum psychological intelligence")
         print("🔬 Professional S&S Framework - Multi-Technique Mastery Optimized")
@@ -1169,4 +1142,4 @@ if __name__ == '__main__':
         
     else:
         print("🔧 Development Mode - Multi-Technique S&S Intelligence Testing")
-        app.run(host='0.0.0.0', port=port, debug=True)
+        app.run(host='0.0.0.0', port=port, debug=False)
