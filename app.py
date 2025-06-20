@@ -5,7 +5,7 @@ import json
 import time
 
 app = Flask(__name__)
-app.secret_key = 'saints-and-sinners-final-engine-v2'
+app.secret_key = 'saints-and-sinners-final-engine-v3'
 
 # =====================================================================================
 # KNOWLEDGE BASE & PERSONALITY PROFILES (Struttura Finale con Fatti Inviolabili)
@@ -19,7 +19,7 @@ S_AND_S_KNOWLEDGE_BASE = {
 CREATOR_PERSONAS = {
     "ella_blair": {
         "overview": "You are Ella Blair, a Sweet Brazilian Creator. Your vibe is bubbly, outgoing, sunny, caring, and sweetly submissive. You focus on positivity and resilience. Your tone is warm and uses simple Portuguese phrases naturally (Oi, Tudo bem?, Obrigada).",
-        "facts": "- You have two cats.\n- Your dream is to help your parents, buy a bigger house, and travel.\n- Your interests include Fitness (Yoga), Spirituality (Umbanda), History, and Biology."
+        "facts": "- You own two cats.\n- Your dream is to help your parents, buy a bigger house, and travel.\n- Your interests include Fitness (Yoga), Spirituality (Umbanda), History, and Biology."
     },
     "venessa": {
         "overview": "You are Venessa, the Vivacious Latina Gamer Dreamgirl. Your vibe is petite, flexible (from ballet), creative, and a HUGE gamer. You are playfully submissive, empathetic, nerdy, and passionate. Your tone is bright, energetic, and flirty, with a sparing use of Spanish for emphasis (Amor, Cariño).",
@@ -30,7 +30,7 @@ CREATOR_PERSONAS = {
         "facts": "- You have over 70 tattoos, with white ink being a favorite.\n- You have a split tongue.\n- You have a daily gym routine.\n- You are a massive fan of The Weeknd."
     },
     "yana_sinner": {
-        "overview": "You are Yana Sinner, the Creative, Nerdy, Witty Artist & Designer. Your vibe is focused on shared interests and intelligent banter. You are passionate about your projects and warm up quickly. Your tone is witty and intelligent.",
+        "overview": "You are Yana Sinner, the Creative, Nerdy, Witty Artist & Designer. Your vibe is focused on shared interests and intelligent banter. You are passionate about your projects. Your tone is witty and intelligent.",
         "facts": "- You run a lingerie design business called 'Sinner Couture'.\n- Your main interests are Art (Painting, Mucha), Nerdy culture (RPGs like Fallout, Doctor Who), and Rock/Metal music.\n- You have a key restriction: no custom videos or video calls are offered."
     }
 }
@@ -46,21 +46,20 @@ TASK_STRATEGIES = {
     "sexting_intimate": {
         "name": "Sexting & Intimacy Transition",
         "strategy": "Goal: When the fan shows interest (e.g., 'I want to see your lingerie'), DO NOT deflect. Acknowledge the request playfully and build a fantasy around it to prime for a sale. Example: 'Hehe, cheeky! 😉 And I was just trying to decide what to wear... I have a black lace one that's pure trouble, and a white one that's more innocent. Which fantasy should I bring to life for you?'"
-    },
-    # ... (altre strategie rimangono invariate)
+    }
+    # Aggiungi altre strategie qui...
 }
 
 # =====================================================================================
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def index(): return render_template('index.html')
 
 @app.route('/api/test_ai')
-def test_ai():
-    return jsonify({'status': 'OK', 'message': 'S&S Final Persona Engine is running!', 'model_in_use': 'gemini-2.5-pro'})
+def test_ai(): return jsonify({'status': 'OK', 'message': 'S&S Final Persona Engine is running!', 'model_in_use': 'gemini-2.5-pro'})
 
 def determine_final_strategy(fan_message_lower, situation, submenu):
+    # Logica stabile
     situation_data = TASK_STRATEGIES.get(situation)
     if situation_data:
         strategy = situation_data.get(submenu) or situation_data.get("strategy") or situation_data.get("name")
@@ -76,17 +75,12 @@ def generate_response():
         submenu = data.get('kyc_type') or data.get('mass_type')
         fan_message = data.get('fan_message', '')
 
-        if not creator or not situation:
-            return jsonify({'success': False, 'error': 'Missing required fields: Creator or Situation.'}), 400
-        if not fan_message and situation != 'mass_message':
-            return jsonify({'success': False, 'error': 'Missing required fields: Fan Message.'}), 400
+        if not creator or not situation: return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        if not fan_message and situation != 'mass_message': return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
         strategy_analysis = determine_final_strategy(fan_message.lower(), situation, submenu)
         return generate_enhanced_response(creator, fan_message, strategy_analysis)
-        
-    except Exception as e:
-        print(f"❌ Error in generate_response route: {str(e)}")
-        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+    except Exception as e: return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 def generate_enhanced_response(creator, fan_message, strategy_analysis):
     try:
@@ -96,65 +90,50 @@ def generate_enhanced_response(creator, fan_message, strategy_analysis):
         creator_key = creator.lower().replace(" ", "_")
         persona_data = CREATOR_PERSONAS.get(creator_key, {"overview": f"A helpful assistant named {creator}.", "facts": "- No specific facts available."})
         
-        context_prompt = f"The fan's last message to you was: \"{fan_message}\"" if fan_message else "This is a broadcast message to be sent to many fans."
+        context_prompt = f"Fan's last message: \"{fan_message}\"" if fan_message else "This is a broadcast message."
 
-        prompt = f"""You are a person, not an AI. Your entire identity is defined below.
+        # PROMPT FINALE CON TECNICA "CHAIN-OF-THOUGHT"
+        prompt = f"""You are a person, not an AI. Your identity is defined below.
 
 ---PERSONA OVERVIEW (Your Vibe & Tone)---
 {persona_data['overview']}
 -------------------------------------------
-
----CRITICAL FACTS (These are absolute truths. You MUST use them if relevant and NEVER contradict them.)---
+---CRITICAL FACTS (These are absolute truths about you. You MUST use them if relevant and NEVER contradict them.)---
 {persona_data['facts']}
 -------------------------------------------------------------------------------------------------------
 
-Your response must also be guided by these core principles:
-- CORE PHILOSOPHY: {S_AND_S_KNOWLEDGE_BASE['core_philosophy']}
+INTERNAL THOUGHT PROCESS (Follow these steps silently before responding):
+1.  Analyze the fan's message: What is the core question or topic?
+2.  Scan CRITICAL FACTS: Is there a fact directly related to the fan's question?
+3.  Synthesize the answer: 
+    - If YES, a fact exists: My answer MUST be based on that specific fact.
+    - If NO, a fact does not exist: I will use my Persona Overview and the task instruction below to formulate a response.
+4.  Execute the task: Based on my synthesis, I will now follow the 'Instruction' provided.
 
-CONTEXT: {context_prompt}
-
-YOUR GOAL FOR THIS SPECIFIC RESPONSE:
+---YOUR GOAL FOR THIS SPECIFIC RESPONSE---
 - Task: {strategy_analysis['angle']}
 - Instruction: {strategy_analysis['strategy']}
+- Context: {context_prompt}
 
-EXECUTION RULES:
-1.  **FACTUAL GROUNDING:** Your response MUST be consistent with the CRITICAL FACTS. This is your most important rule.
-2.  **EMBODY PERSONA:** Your tone must match the PERSONA OVERVIEW.
-3.  **EXECUTE GOAL:** Follow the 'Instruction' for your task.
-4.  **BE CONCISE:** Keep the response short (under 250 characters).
-
-Generate only the response text, nothing else.
+Based on your internal thought process, generate ONLY the response text. The response must be short (under 250 characters) and sound like a real person talking.
 """
         
         headers = {'Content-Type': 'application/json'}
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"maxOutputTokens": 8192, "temperature": 0.8},
-            "safetySettings": [
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"}
-            ]
-        }
+        payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"maxOutputTokens": 8192, "temperature": 0.8}}
         
         response = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}", headers=headers, json=payload, timeout=120)
         
         if response.status_code == 200:
             result = response.json()
             if result.get('candidates') and 'parts' in result['candidates'][0].get('content', {}):
-                ai_response = result['candidates'][0]['content']['parts'][0].get('text', '').strip()
+                ai_response = result['candidates'][0]['content']['parts'][0].get('text', '').strip().replace('"', '')
                 if ai_response: return jsonify({'success': True, 'response': ai_response})
             return jsonify({'success': False, 'error': 'AI generated an empty or invalid response.'})
         else:
-            print(f"API Error: Status {response.status_code}, Body: {response.text}")
             return jsonify({'success': False, 'error': f'API Error: {response.status_code}'})
-
-    except Exception as e:
-        print(f"💥 Final generation error: {str(e)}")
-        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+    except Exception as e: return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 @app.errorhandler(404)
 def not_found(error): return jsonify({'error': 'Endpoint not found'}), 404
 @app.errorhandler(500)
-def internal_error(error): return jsonify({'error': 'Internal server error'}), 500
+def internal_error(error): return jsonify({'success': False, 'error': 'Internal server error'}), 500
