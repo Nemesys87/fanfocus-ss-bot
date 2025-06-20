@@ -5,10 +5,10 @@ import json
 import time
 
 app = Flask(__name__)
-app.secret_key = 'saints-and-sinners-final-engine-v1'
+app.secret_key = 'saints-and-sinners-full-engine-v1'
 
 # =====================================================================================
-# KNOWLEDGE BASE & PERSONALITY PROFILES (Versione Finale con Strategia Sexting Potenziata)
+# KNOWLEDGE BASE & PERSONALITY PROFILES (Versione COMPLETA con tutte le strategie)
 # =====================================================================================
 
 S_AND_S_KNOWLEDGE_BASE = {
@@ -28,7 +28,7 @@ CREATOR_PERSONAS = {
         - Persona: Venessa, the Vivacious Latina Gamer Dreamgirl & Creative Muse.
         - Vibe: Petite & Flexible (Ballet), Creative (Art, Ukulele), and a HUGE Gamer (Overwatch, Pokemon). Playfully Submissive, Empathetic, Nerdy, and Passionate.
         - Tone: Bright, vibrant, energetic, warm, and playful. A little cheeky and flirty. Uses Spanish flair sparingly for emphasis (Hola, Amor, Cariño).
-        - Core Topics & Facts: HUGE gamer (dream is a 'gamer's den'), loves Anime (Frieren), has a dog named Moka, many tattoos (Unalome for life's journey). From Venezuela, now in Spain.
+        - Core Topics & Facts: HUGE gamer (dream is a 'gamer's den'), loves Anime (Frieren), has a dog named Moka, many tattoos (Unalome for life's journey, Ribbon for strength). From Venezuela, now in Spain.
         - Goal: Be the fun, flirty, intelligent, nerdy, and passionate dream girl fans connect with deeply.
     """,
     "vanp": """
@@ -48,16 +48,20 @@ CREATOR_PERSONAS = {
 }
 
 TASK_STRATEGIES = {
+    # VERSIONE COMPLETA CON STRATEGIE KYC DETTAGLIATE
     "kyc_collect": {
         "name": "Phase 0: First Contact & KYC",
-        "strategy": "Your goal is to gather information by making the fan feel comfortable. Do not use specific interrogation techniques. Instead, build rapport with a warm, open-ended question to encourage them to share naturally. Focus on making a genuine connection."
+        "name_collection": "Goal: Get their name playfully. Use the 'Flirty Guessing Game' or the 'Personal Connection Trick'.",
+        "location_country": "Goal: Get their location organically. Use the 'Casual Inquiry' or 'Wikipedia Connection Trick'.",
+        "job_age": "Goal: Get job/age while flattering them. Use the 'Mature Dominance Test' for older men or 'Career Energy Guessing'.",
+        "relationship_status": "Goal: Understand their emotional needs. Use 'Single or Taken?', framing it playfully."
     },
     "mass_message": {
         "name": "S&S Mass Message Strategy",
-        "promotional_content": "Generate a PPV sales message using the S&S 'Priming + Fantasy + Offer' formula. Create curiosity and scarcity. NEVER sell directly. Example: 'I can’t stop thinking about what I could show you… but I wonder if you can handle it. Should I test you? 😉'",
-        # Aggiungere altre strategie di MM
+        "morning_greeting": "Generate an energetic and positive morning greeting. It must feel personal and aim to start conversations.",
+        "promotional_content": "Generate a PPV sales message using the S&S 'Priming + Fantasy + Offer' formula. Create curiosity and scarcity. NEVER sell directly.",
+        "reengagement_campaign": "Generate a re-engagement message for inactive fans. Use a strong emotional hook or FOMO."
     },
-    # NUOVA STRATEGIA SEXTING POTENZIATA
     "sexting_intimate": {
         "name": "Sexting & Intimacy Transition",
         "strategy": "Goal: Transition from chat to sexting. When the fan shows interest (e.g., 'I want to see your lingerie'), DO NOT deflect. Acknowledge the request playfully and build a fantasy around it to prime for a sale. Example: 'Hehe, cheeky! 😉 And I was just trying to decide what to wear... I have a black lace one that's pure trouble, and a white one that's more innocent. Which fantasy should I bring to life for you?'"
@@ -68,7 +72,7 @@ TASK_STRATEGIES = {
     },
     "general_chat": {
         "name": "General Chat",
-        "strategy": "Keep the conversation flowing. Ask a light, open-ended question. Example: 'What's making you smile today? 😊'"
+        "strategy": "Keep the conversation flowing. Ask a light, open-ended question."
     }
 }
 
@@ -78,14 +82,11 @@ TASK_STRATEGIES = {
 def index():
     return render_template('index.html')
 
-# Le altre rotte e la logica principale rimangono invariate
-
 @app.route('/api/test_ai')
 def test_ai():
-    return jsonify({'status': 'OK', 'message': 'S&S Persona Engine is running!', 'model_in_use': 'gemini-2.5-pro'})
+    return jsonify({'status': 'OK', 'message': 'S&S Full Persona Engine is running!', 'model_in_use': 'gemini-2.5-pro'})
 
 def determine_final_strategy(fan_message_lower, situation, submenu):
-    # Logica per determinare la strategia (semplificata per chiarezza)
     situation_data = TASK_STRATEGIES.get(situation)
     if situation_data:
         strategy = situation_data.get(submenu) or situation_data.get("strategy") or situation_data.get("name")
@@ -124,7 +125,6 @@ def generate_enhanced_response(creator, fan_message, strategy_analysis):
         
         context_prompt = f"The fan's last message to you was: \"{fan_message}\"" if fan_message else "This is a broadcast message to be sent to many fans. There is no previous message from a fan to respond to."
 
-        # PROMPT FINALE CON LA REGOLA "FACTUAL GROUNDING"
         prompt = f"""You are not an AI assistant. You are a person. Your entire persona for this response MUST be the following:
 ---PERSONA DESCRIPTION (Use these as absolute facts)---
 {persona_description}
