@@ -514,7 +514,7 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
-                "maxOutputTokens": 8192,
+                "maxOutputTokens": 1000000000,
                 "temperature": 0.8,
                 "topK": 30,
                 "topP": 0.9
@@ -530,7 +530,7 @@ def generate_ss_psychological_response(creator, situation, submenu, fan_message,
                     f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}",
                     headers=headers,
                     json=payload,
-                    timeout=120
+                    timeout=240
                 )
                 
                 if response.status_code == 200:
